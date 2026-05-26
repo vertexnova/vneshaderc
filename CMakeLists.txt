@@ -23,7 +23,7 @@ if(NOT DEFINED PROJECT_VERSION_INIT)
     set(PROJECT_VERSION_INIT "1.0.0")
 endif()
 
-project(vnetemplate VERSION ${PROJECT_VERSION_INIT} LANGUAGES CXX)
+project(vnesc VERSION ${PROJECT_VERSION_INIT} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -96,7 +96,7 @@ endif()
 #==============================================================================
 include(VneUseDep)
 
-function(_vnetemplate_configure_vnecommon_dep)
+function(_vnesc_configure_vnecommon_dep)
     get_property(_vt_build_examples_ty CACHE BUILD_EXAMPLES PROPERTY TYPE)
     if(NOT _vt_build_examples_ty STREQUAL "NOTFOUND" AND _vt_build_examples_ty)
         set(_vt_build_examples_saved "${BUILD_EXAMPLES}")
@@ -109,9 +109,9 @@ function(_vnetemplate_configure_vnecommon_dep)
         unset(BUILD_EXAMPLES CACHE)
     endif()
 endfunction()
-_vnetemplate_configure_vnecommon_dep()
+_vnesc_configure_vnecommon_dep()
 
-function(_vnetemplate_configure_vnelogging_dep)
+function(_vnesc_configure_vnelogging_dep)
     get_property(_vt_build_tests_ty CACHE BUILD_TESTS PROPERTY TYPE)
     if(NOT _vt_build_tests_ty STREQUAL "NOTFOUND" AND _vt_build_tests_ty)
         set(_vt_build_tests_saved "${BUILD_TESTS}")
@@ -135,7 +135,7 @@ function(_vnetemplate_configure_vnelogging_dep)
         unset(BUILD_EXAMPLES CACHE)
     endif()
 endfunction()
-_vnetemplate_configure_vnelogging_dep()
+_vnesc_configure_vnelogging_dep()
 
 # Include dirs and config
 set(VNE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
@@ -158,26 +158,27 @@ include_directories(${CMAKE_BINARY_DIR})
 #   default; -D from the command line applies to all. No duplicate option()
 #   definition (CMake uses cache), but behavior is "one value for the whole tree."
 #==============================================================================
-if(CMAKE_PROJECT_NAME STREQUAL "vnetemplate")
-    set(VNE_TEMPLATE_DEV_DEFAULT ON)
+if(CMAKE_PROJECT_NAME STREQUAL "vnesc")
+    set(VNE_SC_DEV_DEFAULT ON)
 else()
-    set(VNE_TEMPLATE_DEV_DEFAULT OFF)
+    set(VNE_SC_DEV_DEFAULT OFF)
 endif()
-option(VNE_TEMPLATE_DEV "Dev build: enable tests (local development)" ${VNE_TEMPLATE_DEV_DEFAULT})
-option(VNE_TEMPLATE_CI "CI build: enable tests (e.g. -DVNE_TEMPLATE_CI=ON in pipelines)" OFF)
+option(VNE_SC_DEV "Dev build: enable tests (local development)" ${VNE_SC_DEV_DEFAULT})
+option(VNE_SC_CI "CI build: enable tests (e.g. -DVNE_SC_CI=ON in pipelines)" OFF)
 
-if(VNE_TEMPLATE_CI)
-    set(VNE_TEMPLATE_DEV OFF CACHE BOOL "" FORCE)
+if(VNE_SC_CI)
+    set(VNE_SC_DEV OFF CACHE BOOL "" FORCE)
 endif()
 
-option(VNE_TEMPLATE_TESTS "Build vnetemplate test suite (turn OFF when used as submodule)" ON)
-option(VNE_TEMPLATE_EXAMPLES "Build vnetemplate example programs (turn OFF when used as submodule)" OFF)
-set(VNE_TEMPLATE_LIB_TYPE "shared" CACHE STRING "Library type for vnetemplate: static or shared (one per build)")
-set_property(CACHE VNE_TEMPLATE_LIB_TYPE PROPERTY STRINGS "static" "shared")
-if(NOT VNE_TEMPLATE_LIB_TYPE STREQUAL "static" AND NOT VNE_TEMPLATE_LIB_TYPE STREQUAL "shared")
-    message(FATAL_ERROR
-        "VNE_TEMPLATE_LIB_TYPE must be 'static' or 'shared'. Got: ${VNE_TEMPLATE_LIB_TYPE}")
-endif()
+option(VNE_SC_TESTS    "Build vnesc test suite (turn OFF when used as submodule)" ON)
+option(VNE_SC_EXAMPLES "Build vnesc example programs (turn OFF when used as submodule)" OFF)
+
+# ── Shader compiler backend options ──────────────────────────────────────────
+option(VNE_SC_GLSLANG    "Enable glslang GLSL→SPIR-V front-end (Phase 1, primary)" ON)
+option(VNE_SC_DXC        "Enable DXC HLSL→SPIR-V front-end (Phase 2 — stub only)" OFF)
+option(VNE_SC_SLANG      "Enable Slang front-end (Phase 3 — stub only)" OFF)
+option(VNE_SC_SPIRVTOOLS "Enable SPIRV-Tools SPIR-V validator (OFF = no-op validator)" OFF)
+
 option(ENABLE_DOXYGEN "Enable Doxygen documentation builds" OFF)
 option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/GCC, Linux/macOS only)" OFF)
@@ -220,60 +221,61 @@ if(ENABLE_ASAN)
     endif()
 endif()
 
-if(VNE_TEMPLATE_CI)
-    # CI enables tests by default, but allow explicit -DVNE_TEMPLATE_TESTS=OFF to override
-    # (e.g. iOS/Android cross-compile builds: Xcode requires bundle ID for test targets).
-    if(NOT DEFINED VNE_TEMPLATE_TESTS OR VNE_TEMPLATE_TESTS)
-        set(VNE_TEMPLATE_TESTS ON CACHE BOOL "" FORCE)
+if(VNE_SC_CI)
+    if(NOT DEFINED VNE_SC_TESTS OR VNE_SC_TESTS)
+        set(VNE_SC_TESTS ON CACHE BOOL "" FORCE)
     endif()
-    set(VNE_TEMPLATE_EXAMPLES OFF CACHE BOOL "" FORCE)
-    message(STATUS "VneTemplate: CI build -> VNE_TEMPLATE_TESTS=${VNE_TEMPLATE_TESTS}, VNE_TEMPLATE_EXAMPLES=OFF")
-elseif(VNE_TEMPLATE_DEV)
-    set(VNE_TEMPLATE_TESTS ON CACHE BOOL "" FORCE)
-    set(VNE_TEMPLATE_EXAMPLES ON CACHE BOOL "" FORCE)
-    message(STATUS "VneTemplate: DEV build -> VNE_TEMPLATE_TESTS=ON, VNE_TEMPLATE_EXAMPLES=ON")
+    set(VNE_SC_EXAMPLES OFF CACHE BOOL "" FORCE)
+    message(STATUS "vnesc: CI build -> VNE_SC_TESTS=${VNE_SC_TESTS}, VNE_SC_EXAMPLES=OFF")
+elseif(VNE_SC_DEV)
+    set(VNE_SC_TESTS ON CACHE BOOL "" FORCE)
+    set(VNE_SC_EXAMPLES ON CACHE BOOL "" FORCE)
+    message(STATUS "vnesc: DEV build -> VNE_SC_TESTS=ON, VNE_SC_EXAMPLES=ON")
 endif()
 
 #==============================================================================
 # Compiler Warnings
 #==============================================================================
-add_library(TemplateWarnings INTERFACE)
+add_library(VnescWarnings INTERFACE)
 include(ProjectWarnings)
-set_project_warnings(TemplateWarnings)
-add_library(vne::template::Warnings ALIAS TemplateWarnings)
+set_project_warnings(VnescWarnings)
+add_library(vne::sc::Warnings ALIAS VnescWarnings)
 
 #==============================================================================
 # Build Settings Interface Library
 #==============================================================================
-add_library(TemplateBuildSettings INTERFACE)
-target_compile_features(TemplateBuildSettings INTERFACE cxx_std_20)
-add_library(vne::template::BuildSettings ALIAS TemplateBuildSettings)
+add_library(VnescBuildSettings INTERFACE)
+target_compile_features(VnescBuildSettings INTERFACE cxx_std_20)
+add_library(vne::sc::BuildSettings ALIAS VnescBuildSettings)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_BUILD_TYPE_DEBUG VNE_DEVELOPER_BUILD)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_BUILD_TYPE_DEBUG VNE_DEVELOPER_BUILD)
 elseif(CMAKE_BUILD_TYPE MATCHES Release)
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_BUILD_TYPE_RELEASE)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_BUILD_TYPE_RELEASE)
 elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_BUILD_TYPE_RELWITHDEBINFO)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_BUILD_TYPE_RELWITHDEBINFO)
 elseif(CMAKE_BUILD_TYPE MATCHES MinSizeRel)
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_BUILD_TYPE_MINSIZEREL)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_BUILD_TYPE_MINSIZEREL)
 endif()
 
 if(VNE_TARGET_PLATFORM STREQUAL "Windows")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_WIN)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_WIN)
 elseif(VNE_TARGET_PLATFORM STREQUAL "Linux")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_LINUX)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_LINUX)
 elseif(VNE_TARGET_PLATFORM STREQUAL "macOS")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_MACOS)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_MACOS)
 elseif(VNE_TARGET_PLATFORM STREQUAL "iOS")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_IOS)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_IOS)
 elseif(VNE_TARGET_PLATFORM STREQUAL "visionOS")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_VISIONOS)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_VISIONOS)
 elseif(VNE_TARGET_PLATFORM STREQUAL "Android")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_ANDROID)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_ANDROID)
 elseif(VNE_TARGET_PLATFORM STREQUAL "Web")
-    target_compile_definitions(TemplateBuildSettings INTERFACE VNE_PLATFORM_WEB)
+    target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_WEB)
 endif()
+
+# Shader compiler backends
+include(cmake/VnescDeps.cmake)
 
 #==============================================================================
 # Add Library
@@ -283,7 +285,7 @@ add_subdirectory(src)
 #==============================================================================
 # Tests
 #==============================================================================
-if(VNE_TEMPLATE_TESTS)
+if(VNE_SC_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
@@ -291,7 +293,7 @@ endif()
 #==============================================================================
 # Examples
 #==============================================================================
-if(VNE_TEMPLATE_EXAMPLES)
+if(VNE_SC_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
@@ -305,13 +307,13 @@ if(ENABLE_DOXYGEN)
         set(DOXYGEN_OUT ${CMAKE_BINARY_DIR}/doxyfile)
         set(DOXYGEN_HAVE_DOT ${DOXYGEN_DOT_FOUND})
         configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-        add_custom_target(vnetemplate_doc_doxygen ALL
+        add_custom_target(vnesc_doc_doxygen ALL
             COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMENT "Generating API documentation with Doxygen"
             VERBATIM
         )
-        message(STATUS "Doxygen target: vnetemplate_doc_doxygen")
+        message(STATUS "Doxygen target: vnesc_doc_doxygen")
     else()
         message(STATUS "Doxygen not found. Install doxygen to build documentation.")
     endif()
@@ -319,23 +321,19 @@ endif()
 
 #==============================================================================
 # Installation
-# Use COMPONENT vnetemplate so that `cmake --install . --component vnetemplate`
-# installs only this library — not the internal deps (vnecommon, vnelogging)
-# which register their own install() rules via add_subdirectory.
 #==============================================================================
 include(GNUInstallDirs)
-install(TARGETS vnetemplate TemplateWarnings TemplateBuildSettings
+set(_vnesc_install_targets vnesc vnesc_interface vnesc_spirvcross vnesc_validator VnescWarnings VnescBuildSettings)
+if(VNE_SC_GLSLANG AND TARGET vnesc_glslang)
+    list(APPEND _vnesc_install_targets vnesc_glslang)
+endif()
+install(TARGETS ${_vnesc_install_targets}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    COMPONENT vnetemplate
+    COMPONENT vnesc
 )
 install(DIRECTORY include/vertexnova/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova
-    COMPONENT vnetemplate
+    COMPONENT vnesc
     FILES_MATCHING PATTERN "*.h")
-install(DIRECTORY src/vertexnova/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova
-    COMPONENT vnetemplate
-    FILES_MATCHING PATTERN "*.h")
-install(FILES ${CMAKE_BINARY_DIR}/config.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova/template
-    COMPONENT vnetemplate)

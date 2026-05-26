@@ -2,71 +2,49 @@
 # Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
-# Author:    Ajeet Singh Yadav
-# Created:   February 2026
-#
-# Autodoc:   yes
+# vnesc test suite
 #==============================================================================
 
-if(NOT TARGET vnetemplate)
+if(NOT TARGET vnesc)
     return()
 endif()
 
-#==============================================================================
-# Setup Google Test
-#==============================================================================
+# ── Google Test ───────────────────────────────────────────────────────────────
 if(EXISTS "${PROJECT_SOURCE_DIR}/deps/external/googletest/CMakeLists.txt")
-    message(STATUS "Using Google Test from deps/external/googletest (v1.17.0)")
-    add_subdirectory(${PROJECT_SOURCE_DIR}/deps/external/googletest ${CMAKE_BINARY_DIR}/deps/external/googletest)
-    include(GoogleTest)
-    set(GTEST_LIBRARIES gtest_main gmock)
-    set(GTEST_INCLUDE_DIRS
-        ${PROJECT_SOURCE_DIR}/deps/external/googletest/googletest/include
-        ${PROJECT_SOURCE_DIR}/deps/external/googletest/googlemock/include
-    )
+    message(STATUS "vnesc tests: using vendored googletest")
+    add_subdirectory(
+        ${PROJECT_SOURCE_DIR}/deps/external/googletest
+        ${CMAKE_BINARY_DIR}/deps/external/googletest
+        EXCLUDE_FROM_ALL)
+    set(GTEST_LIBS gtest_main gmock)
 else()
     find_package(GTest QUIET)
     if(GTest_FOUND)
-        message(STATUS "Using system Google Test")
-        set(GTEST_LIBRARIES GTest::gtest_main GTest::gmock)
-        set(GTEST_INCLUDE_DIRS "")
+        message(STATUS "vnesc tests: using system googletest")
+        set(GTEST_LIBS GTest::gtest_main GTest::gmock)
     else()
-        message(STATUS "deps/external/googletest not found, using FetchContent")
+        message(STATUS "vnesc tests: fetching googletest v1.17.0")
         include(FetchContent)
-        FetchContent_Declare(
-            googletest
+        FetchContent_Declare(googletest
             GIT_REPOSITORY https://github.com/google/googletest.git
             GIT_TAG        v1.17.0
-        )
+            GIT_SHALLOW    TRUE)
         FetchContent_MakeAvailable(googletest)
-        set(GTEST_LIBRARIES gtest_main gmock)
-        set(GTEST_INCLUDE_DIRS ${googletest_SOURCE_DIR}/googletest/include ${googletest_SOURCE_DIR}/googlemock/include)
+        set(GTEST_LIBS gtest_main gmock)
     endif()
 endif()
 
-#==============================================================================
-# Test sources
-#==============================================================================
-set(TEST_SOURCES
-    template_test.cpp
-)
+# ── Test executable ───────────────────────────────────────────────────────────
+add_executable(vnesc_tests vnesc_tests.cpp)
+target_include_directories(vnesc_tests PRIVATE
+    ${PROJECT_SOURCE_DIR}/src)   # internal headers (e.g. GlslangFrontEnd)
+target_link_libraries(vnesc_tests PRIVATE
+    ${GTEST_LIBS}
+    vnesc)
+if(VNE_SC_GLSLANG)
+    target_link_libraries(vnesc_tests PRIVATE vnesc_glslang)
+    target_compile_definitions(vnesc_tests PRIVATE VNE_SC_GLSLANG_ENABLED)
+endif()
 
-#==============================================================================
-# Build test executable
-#==============================================================================
-add_executable(vnetemplate_tests ${TEST_SOURCES})
-
-target_include_directories(vnetemplate_tests
-    PRIVATE
-        ${GTEST_INCLUDE_DIRS}
-        ${VNE_INCLUDE_DIR}
-        ${VNE_SRC_DIR}
-)
-
-target_link_libraries(vnetemplate_tests
-    PRIVATE
-        ${GTEST_LIBRARIES}
-        vne::template
-)
-
-add_test(NAME vnetemplate_tests COMMAND vnetemplate_tests)
+include(GoogleTest)
+gtest_discover_tests(vnesc_tests)
