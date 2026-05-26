@@ -230,13 +230,33 @@ endif()
 # nlohmann/json (offline manifests / bundle manifest.json)
 # ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_JSON)
-    FetchContent_Declare(nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG        v3.11.3
-        GIT_SHALLOW    TRUE)
+    set(_vne_sc_json_vendored "${_vne_sc_repo_root}/deps/external/nlohmann_json")
+    if(EXISTS "${_vne_sc_json_vendored}/CMakeLists.txt")
+        set(_vne_sc_json_dir_init "${_vne_sc_json_vendored}")
+    else()
+        set(_vne_sc_json_dir_init "")
+    endif()
+    set(VNE_SC_JSON_DIR "${_vne_sc_json_dir_init}" CACHE PATH
+        "nlohmann/json source root. Empty: FetchContent. Default: deps/external/nlohmann_json if present." FORCE)
+
+    _vne_sc_resolve_dep(nlohmann_json
+        "${_vne_sc_json_vendored}" VNE_SC_JSON_DIR
+        _vne_sc_json_src _vne_sc_json_origin)
+
     set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(nlohmann_json)
-    message(STATUS "vnesc: nlohmann/json (FetchContent)")
+    set(JSON_Install OFF CACHE BOOL "" FORCE)
+    if(_vne_sc_json_src)
+        add_subdirectory("${_vne_sc_json_src}"
+                         "${CMAKE_BINARY_DIR}/deps/external/nlohmann_json" EXCLUDE_FROM_ALL)
+    else()
+        FetchContent_Declare(nlohmann_json
+            GIT_REPOSITORY https://github.com/nlohmann/json.git
+            GIT_TAG        v3.11.3
+            GIT_SHALLOW    TRUE)
+        FetchContent_MakeAvailable(nlohmann_json)
+        set(_vne_sc_json_origin "fetch:v3.11.3")
+    endif()
+    message(STATUS "vnesc: nlohmann/json (${_vne_sc_json_origin})")
 endif()
 
 # ══════════════════════════════════════════════════════════════════════════════

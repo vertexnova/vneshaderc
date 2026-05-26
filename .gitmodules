@@ -22,3 +22,6 @@
 [submodule "deps/external/SPIRV-Tools"]
 	path = deps/external/SPIRV-Tools
 	url = https://github.com/KhronosGroup/SPIRV-Tools.git
+[submodule "deps/external/nlohmann_json"]
+	path = deps/external/nlohmann_json
+	url = https://github.com/nlohmann/json.git

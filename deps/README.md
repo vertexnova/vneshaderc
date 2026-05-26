@@ -21,6 +21,7 @@ CMake modules (vnecmake) live in **cmake/vnecmake** at the project root; see mai
 | SPIRV-Headers | `deps/external/SPIRV-Headers` | https://github.com/KhronosGroup/SPIRV-Headers.git |
 | glslang | `deps/external/glslang` | https://github.com/KhronosGroup/glslang.git |
 | SPIRV-Tools | `deps/external/SPIRV-Tools` | https://github.com/KhronosGroup/SPIRV-Tools.git |
+| nlohmann_json | `deps/external/nlohmann_json` | https://github.com/nlohmann/json.git |
 | vnecommon | `deps/internal/vnecommon` | https://github.com/vertexnova/vnecommon.git |
 | vnelogging | `deps/internal/vnelogging` | https://github.com/vertexnova/vnelogging.git |
 
