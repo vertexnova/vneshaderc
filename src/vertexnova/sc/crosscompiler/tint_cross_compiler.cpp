@@ -7,16 +7,16 @@
 #include "tint_cross_compiler.h"
 
 #include "vertexnova/logging/logging.h"
-
-#include <sstream>
-
-CREATE_VNE_LOGGER_CATEGORY("vne.sc.tint")
-
-namespace vne::sc {
-
 #ifdef VNE_SC_TINT_ENABLED
 #include "tint/tint.h"
 #endif
+
+#include <sstream>
+
+namespace {
+CREATE_VNE_LOGGER_CATEGORY("vne.sc.tint");
+}  // namespace
+namespace vne::sc {
 
 TintCrossCompiler::TintCrossCompiler() {
 #ifdef VNE_SC_TINT_ENABLED
@@ -66,19 +66,9 @@ CrossCompileResult TintCrossCompiler::crossCompile(const CrossCompileRequest& re
     }
 
     result.source = tint_result.Get();
-    result.entry_point = req.stage == ShaderStage::eFragment ? "main" : "main";
     result.code = ResultCode::eSuccess;
-
-    if (result.source.find("@vertex") != std::string::npos || result.source.find("@fragment") != std::string::npos
-        || result.source.find("@compute") != std::string::npos) {
-        if (req.stage == ShaderStage::eVertex) {
-            result.entry_point = "vertex_main";
-        } else if (req.stage == ShaderStage::eFragment) {
-            result.entry_point = "fragment_main";
-        } else if (req.stage == ShaderStage::eCompute) {
-            result.entry_point = "compute_main";
-        }
-    }
+    // Keep the known-safe default unless explicit entry-point extraction is implemented.
+    result.entry_point = "main";
 
     VNE_LOG_DEBUG << "TintCrossCompiler: produced " << result.source.size() << " bytes of WGSL";
     return result;

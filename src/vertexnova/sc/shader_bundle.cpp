@@ -207,7 +207,11 @@ std::optional<ShaderBundleHeader> readShaderBundleHeader(const std::filesystem::
     if (!in.is_open()) {
         return std::nullopt;
     }
-    const auto size = static_cast<size_t>(in.tellg());
+    const auto end_pos = in.tellg();
+    if (end_pos < 0) {
+        return std::nullopt;
+    }
+    const auto size = static_cast<size_t>(end_pos);
     in.seekg(0);
     std::string data(size, '\0');
     in.read(data.data(), static_cast<std::streamsize>(size));
@@ -226,6 +230,10 @@ std::optional<ShaderBundleHeader> readShaderBundleHeader(const std::filesystem::
         header.name = r.str();
         header.source_lang = static_cast<SourceLang>(r.u8());
         const uint32_t count = r.u32();
+        constexpr uint32_t kMaxStages = 16;
+        if (count > kMaxStages) {
+            return std::nullopt;
+        }
         header.stages.resize(count);
         for (auto& s : header.stages) {
             s.stage = static_cast<ShaderStage>(r.u8());
@@ -248,7 +256,11 @@ std::optional<ProgramReflection> readShaderBundleReflection(const std::filesyste
     if (!in.is_open()) {
         return std::nullopt;
     }
-    const auto size = static_cast<size_t>(in.tellg());
+    const auto end_pos = in.tellg();
+    if (end_pos < 0) {
+        return std::nullopt;
+    }
+    const auto size = static_cast<size_t>(end_pos);
     in.seekg(0);
     std::string data(size, '\0');
     in.read(data.data(), static_cast<std::streamsize>(size));
