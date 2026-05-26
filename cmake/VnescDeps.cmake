@@ -28,7 +28,7 @@ get_filename_component(_vne_sc_repo_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE
 function(_vne_sc_resolve_dep _name _vendored _override_cache _out_src _out_origin)
     set(_src "")
     set(_origin "")
-    if(${_override_cache})
+    if(DEFINED ${_override_cache} AND NOT "${${_override_cache}}" STREQUAL "")
         get_filename_component(_override_path "${${_override_cache}}" REALPATH)
         if(EXISTS "${_override_path}/CMakeLists.txt")
             set(_src "${_override_path}")
@@ -189,8 +189,13 @@ endif()
 # ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_SPIRVTOOLS)
     set(_vne_sc_spirvtools_vendored "${_vne_sc_repo_root}/deps/external/SPIRV-Tools")
-    set(VNE_SC_SPIRV_TOOLS_DIR
-        "${_vne_sc_spirvtools_vendored}" CACHE PATH "SPIRV-Tools source root.")
+    if(EXISTS "${_vne_sc_spirvtools_vendored}/CMakeLists.txt")
+        set(_vne_sc_spirvtools_dir_init "${_vne_sc_spirvtools_vendored}")
+    else()
+        set(_vne_sc_spirvtools_dir_init "")
+    endif()
+    set(VNE_SC_SPIRV_TOOLS_DIR "${_vne_sc_spirvtools_dir_init}" CACHE PATH
+        "SPIRV-Tools source root. Empty: FetchContent. Default: deps/external/SPIRV-Tools if present.")
     _vne_sc_resolve_dep(SPIRV-Tools
         "${_vne_sc_spirvtools_vendored}" VNE_SC_SPIRV_TOOLS_DIR
         _vne_sc_spirvtools_src _vne_sc_spirvtools_origin)
