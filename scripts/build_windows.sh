@@ -35,8 +35,8 @@ BUILD_TYPE="Debug"
 ACTION="configure_and_build"
 CLEAN_BUILD=false
 WITH_DEV=true
-WITH_TESTS=true
-WITH_EXAMPLES=false
+WITH_TESTS=
+WITH_EXAMPLES=
 WITH_TINT=false
 WITH_SPIRVTOOLS=false
 WITH_GLSLANG=true
@@ -48,7 +48,8 @@ while [[ $# -gt 0 ]]; do
     -t|--build-type) BUILD_TYPE="$2"; shift 2 ;;
     -a|--action) ACTION="$2"; shift 2 ;;
     -clean|--clean) CLEAN_BUILD=true; shift ;;
-    --dev) WITH_DEV=true; WITH_TESTS=true; shift ;;
+    --dev) WITH_DEV=true; shift ;;
+    --no-dev) WITH_DEV=false; shift ;;
     --with-tests) WITH_TESTS=true; shift ;;
     --no-tests) WITH_TESTS=false; shift ;;
     --with-examples) WITH_EXAMPLES=true; shift ;;
@@ -63,7 +64,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$WITH_DEV" == true ]] && WITH_TESTS=true && WITH_EXAMPLES=true
+if [[ -z "${WITH_TESTS:-}" ]]; then
+  [[ "$WITH_DEV" == true ]] && WITH_TESTS=true || WITH_TESTS=false
+fi
+if [[ -z "${WITH_EXAMPLES:-}" ]]; then
+  [[ "$WITH_DEV" == true ]] && WITH_EXAMPLES=true || WITH_EXAMPLES=false
+fi
 
 if ! command -v cl &> /dev/null; then
   echo "Error: Visual Studio compiler 'cl' not found."
