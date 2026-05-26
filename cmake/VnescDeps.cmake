@@ -63,7 +63,7 @@ else()
     set(_vne_sc_spirvcross_dir_init "")
 endif()
 set(VNE_SC_SPIRV_CROSS_DIR "${_vne_sc_spirvcross_dir_init}" CACHE PATH
-    "SPIRV-Cross source root. Empty: FetchContent. Default: deps/external/SPIRV-Cross if present.")
+    "SPIRV-Cross source root. Empty: FetchContent. Default: deps/external/SPIRV-Cross if present." FORCE)
 
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_TESTS             OFF CACHE BOOL "" FORCE)
@@ -122,7 +122,7 @@ if(VNE_SC_GLSLANG)
         set(_vne_sc_spirvhdr_dir_init "")
     endif()
     set(VNE_SC_SPIRV_HEADERS_DIR "${_vne_sc_spirvhdr_dir_init}" CACHE PATH
-        "SPIRV-Headers source root. Empty: FetchContent. Default: deps/external/SPIRV-Headers if present.")
+        "SPIRV-Headers source root. Empty: FetchContent. Default: deps/external/SPIRV-Headers if present." FORCE)
     _vne_sc_resolve_dep(SPIRV-Headers
         "${_vne_sc_spirvhdr_vendored}" VNE_SC_SPIRV_HEADERS_DIR
         _vne_sc_spirvhdr_src _vne_sc_spirvhdr_origin)
@@ -147,7 +147,7 @@ if(VNE_SC_GLSLANG)
         set(_vne_sc_glslang_dir_init "")
     endif()
     set(VNE_SC_GLSLANG_DIR "${_vne_sc_glslang_dir_init}" CACHE PATH
-        "glslang source root. Empty: FetchContent. Default: deps/external/glslang if present.")
+        "glslang source root. Empty: FetchContent. Default: deps/external/glslang if present." FORCE)
     _vne_sc_resolve_dep(glslang
         "${_vne_sc_glslang_vendored}" VNE_SC_GLSLANG_DIR
         _vne_sc_glslang_src _vne_sc_glslang_origin)
@@ -195,7 +195,7 @@ if(VNE_SC_SPIRVTOOLS)
         set(_vne_sc_spirvtools_dir_init "")
     endif()
     set(VNE_SC_SPIRV_TOOLS_DIR "${_vne_sc_spirvtools_dir_init}" CACHE PATH
-        "SPIRV-Tools source root. Empty: FetchContent. Default: deps/external/SPIRV-Tools if present.")
+        "SPIRV-Tools source root. Empty: FetchContent. Default: deps/external/SPIRV-Tools if present." FORCE)
     _vne_sc_resolve_dep(SPIRV-Tools
         "${_vne_sc_spirvtools_vendored}" VNE_SC_SPIRV_TOOLS_DIR
         _vne_sc_spirvtools_src _vne_sc_spirvtools_origin)
