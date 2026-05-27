@@ -86,22 +86,21 @@ CrossCompileResult TintCrossCompiler::crossCompile(const CrossCompileRequest& re
     // Tint may reassign bindings; callers use this table to patch reflection.
     {
         // Matches: @group(N) @binding(M) var<...> name  OR  @group(N) @binding(M) var name
-        static const std::regex kBindingRe(
-            R"(@group\((\d+)\)\s*@binding\((\d+)\)\s*var[^:]*?:\s*\S+\s+(\w+))"
-            "|"
-            R"(@group\((\d+)\)\s*@binding\((\d+)\)\s*var\s+(\w+))");
+        static const std::regex kBindingRe(R"(@group\((\d+)\)\s*@binding\((\d+)\)\s*var[^:]*?:\s*\S+\s+(\w+))"
+                                           "|"
+                                           R"(@group\((\d+)\)\s*@binding\((\d+)\)\s*var\s+(\w+))");
         std::sregex_iterator it(result.source.begin(), result.source.end(), kBindingRe);
         for (std::sregex_iterator end; it != end; ++it) {
             const std::smatch& m = *it;
             WgpuBindingRemap remap;
             if (m[1].matched) {
-                remap.group   = static_cast<uint32_t>(std::stoul(m[1].str()));
+                remap.group = static_cast<uint32_t>(std::stoul(m[1].str()));
                 remap.binding = static_cast<uint32_t>(std::stoul(m[2].str()));
-                remap.name    = m[3].str();
+                remap.name = m[3].str();
             } else {
-                remap.group   = static_cast<uint32_t>(std::stoul(m[4].str()));
+                remap.group = static_cast<uint32_t>(std::stoul(m[4].str()));
                 remap.binding = static_cast<uint32_t>(std::stoul(m[5].str()));
-                remap.name    = m[6].str();
+                remap.name = m[6].str();
             }
             if (!remap.name.empty()) {
                 result.wgpu_binding_remap.push_back(std::move(remap));

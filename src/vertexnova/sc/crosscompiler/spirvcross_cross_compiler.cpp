@@ -352,8 +352,8 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
         }
 
         result.code = ResultCode::eSuccess;
-        VNE_LOG_DEBUG << "SpirvCrossCrossCompiler: MSL compiled, entry=" << result.entry_point
-                      << " (" << result.source.size() << " bytes)";
+        VNE_LOG_DEBUG << "SpirvCrossCrossCompiler: MSL compiled, entry=" << result.entry_point << " ("
+                      << result.source.size() << " bytes)";
         return result;
 
     } catch (const std::exception& e) {
@@ -396,8 +396,8 @@ CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& re
         result.source = compiler.compile();
         result.entry_point = "main";
         result.code = ResultCode::eSuccess;
-        VNE_LOG_DEBUG << "SpirvCrossCrossCompiler: GLSL" << (es ? " ES" : "") << " compiled ("
-                      << result.source.size() << " bytes)";
+        VNE_LOG_DEBUG << "SpirvCrossCrossCompiler: GLSL" << (es ? " ES" : "") << " compiled (" << result.source.size()
+                      << " bytes)";
         return result;
 
     } catch (const std::exception& e) {
@@ -413,7 +413,8 @@ CrossCompileResult SpirvCrossCrossCompiler::toWGSL(const CrossCompileRequest& re
     CrossCompileResult result;
     (void)req;
     result.code = ResultCode::eUnavailable;
-    result.error = "SpirvCrossCrossCompiler: WGSL requires Tint (use DispatchCrossCompiler or build with -DVNE_SC_TINT=ON)";
+    result.error =
+        "SpirvCrossCrossCompiler: WGSL requires Tint (use DispatchCrossCompiler or build with -DVNE_SC_TINT=ON)";
     VNE_LOG_WARN << result.error;
     return result;
 }

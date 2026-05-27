@@ -23,30 +23,46 @@ namespace vne::sc {
 namespace {
 
 std::optional<ShaderStage> parseStageString(const std::string& s) {
-    if (s == "vertex")                                           return ShaderStage::eVertex;
-    if (s == "fragment")                                         return ShaderStage::eFragment;
-    if (s == "compute")                                          return ShaderStage::eCompute;
-    if (s == "geometry")                                         return ShaderStage::eGeometry;
-    if (s == "tessellation_control"   || s == "tess_control")   return ShaderStage::eTessellationControl;
-    if (s == "tessellation_evaluation"|| s == "tess_eval")      return ShaderStage::eTessellationEvaluation;
+    if (s == "vertex")
+        return ShaderStage::eVertex;
+    if (s == "fragment")
+        return ShaderStage::eFragment;
+    if (s == "compute")
+        return ShaderStage::eCompute;
+    if (s == "geometry")
+        return ShaderStage::eGeometry;
+    if (s == "tessellation_control" || s == "tess_control")
+        return ShaderStage::eTessellationControl;
+    if (s == "tessellation_evaluation" || s == "tess_eval")
+        return ShaderStage::eTessellationEvaluation;
     return std::nullopt;
 }
 
 std::optional<CrossTarget> parseTargetString(const std::string& s) {
-    if (s == "MSL"    || s == "msl")    return CrossTarget::eMSL;
-    if (s == "WGSL"   || s == "wgsl")   return CrossTarget::eWGSL;
-    if (s == "GLSL"   || s == "glsl")   return CrossTarget::eGLSL;
-    if (s == "GLSLES" || s == "glsles") return CrossTarget::eGLSLES;
-    if (s == "HLSL"   || s == "hlsl")   return CrossTarget::eHLSL;
+    if (s == "MSL" || s == "msl")
+        return CrossTarget::eMSL;
+    if (s == "WGSL" || s == "wgsl")
+        return CrossTarget::eWGSL;
+    if (s == "GLSL" || s == "glsl")
+        return CrossTarget::eGLSL;
+    if (s == "GLSLES" || s == "glsles")
+        return CrossTarget::eGLSLES;
+    if (s == "HLSL" || s == "hlsl")
+        return CrossTarget::eHLSL;
     return std::nullopt;
 }
 
 std::optional<SourceLang> parseSourceLangString(const std::string& s) {
-    if (s == "GLSL"  || s == "glsl")  return SourceLang::eGLSL;
-    if (s == "HLSL"  || s == "hlsl")  return SourceLang::eHLSL;
-    if (s == "MSL"   || s == "msl")   return SourceLang::eMSL;
-    if (s == "WGSL"  || s == "wgsl")  return SourceLang::eWGSL;
-    if (s == "Slang" || s == "slang") return SourceLang::eSlang;
+    if (s == "GLSL" || s == "glsl")
+        return SourceLang::eGLSL;
+    if (s == "HLSL" || s == "hlsl")
+        return SourceLang::eHLSL;
+    if (s == "MSL" || s == "msl")
+        return SourceLang::eMSL;
+    if (s == "WGSL" || s == "wgsl")
+        return SourceLang::eWGSL;
+    if (s == "Slang" || s == "slang")
+        return SourceLang::eSlang;
     return std::nullopt;
 }
 
@@ -54,9 +70,9 @@ std::optional<SourceLang> parseSourceLangString(const std::string& s) {
 
 PipelineBuildDesc ShaderPipelineSpec::toBuildDesc(const std::filesystem::path& spec_dir) const {
     PipelineBuildDesc desc;
-    desc.name     = name;
+    desc.name = name;
     desc.validate = validate;
-    desc.targets  = targets;
+    desc.targets = targets;
 
     // Resolve include_paths relative to spec_dir (if provided).
     std::vector<std::string> resolved_includes;
@@ -70,10 +86,10 @@ PipelineBuildDesc ShaderPipelineSpec::toBuildDesc(const std::filesystem::path& s
 
     for (const auto& ss : stages) {
         CompileRequest req;
-        req.file_path    = ss.file;
-        req.entry_point  = ss.entry_point;
-        req.stage        = ss.stage;
-        req.lang         = source_lang;
+        req.file_path = ss.file;
+        req.entry_point = ss.entry_point;
+        req.stage = ss.stage;
+        req.lang = source_lang;
         req.include_dirs = resolved_includes;
         desc.stages.push_back(std::move(req));
     }
@@ -110,7 +126,8 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
 
         if (doc.contains("targets") && doc["targets"].is_array()) {
             for (const auto& t : doc["targets"]) {
-                if (!t.is_string()) continue;
+                if (!t.is_string())
+                    continue;
                 if (auto target = parseTargetString(t.get<std::string>())) {
                     spec.targets.push_back(*target);
                 } else {
@@ -148,7 +165,7 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             }
             ShaderStageSpec ss;
             ss.stage = *stage_val;
-            ss.file  = stage_entry["file"].get<std::string>();
+            ss.file = stage_entry["file"].get<std::string>();
             if (stage_entry.contains("entry_point") && stage_entry["entry_point"].is_string()) {
                 ss.entry_point = stage_entry["entry_point"].get<std::string>();
             } else if (stage_entry.contains("entry") && stage_entry["entry"].is_string()) {
@@ -168,8 +185,8 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             return std::nullopt;
         }
 
-        VNE_LOG_DEBUG << "parseShaderPipelineSpecJson: loaded '" << spec.name
-                      << "' (" << spec.stages.size() << " stage(s))";
+        VNE_LOG_DEBUG << "parseShaderPipelineSpecJson: loaded '" << spec.name << "' (" << spec.stages.size()
+                      << " stage(s))";
         return spec;
 
     } catch (const std::exception& ex) {

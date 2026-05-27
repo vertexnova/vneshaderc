@@ -21,7 +21,7 @@ namespace vne::sc {
  * @brief One stage entry in a @ref ShaderPipelineSpec.
  */
 struct ShaderStageSpec {
-    ShaderStage stage       = ShaderStage::eVertex;
+    ShaderStage stage = ShaderStage::eVertex;
     std::string file;
     std::string entry_point = "main";
 };
@@ -30,13 +30,13 @@ struct ShaderStageSpec {
  * @brief Parsed pipeline spec (typically loaded from a `.pipeline.json` file).
  */
 struct ShaderPipelineSpec {
-    std::string                  name;
-    SourceLang                   source_lang = SourceLang::eGLSL;
+    std::string name;
+    SourceLang source_lang = SourceLang::eGLSL;
     std::vector<ShaderStageSpec> stages;
-    std::vector<CrossTarget>     targets;
-    std::vector<std::string>     include_paths;  ///< Resolved relative to the spec file's directory.
-    bool                         validate = true;
-    std::vector<std::string>     errors;          ///< Non-fatal parse warnings / errors.
+    std::vector<CrossTarget> targets;
+    std::vector<std::string> include_paths;  ///< Resolved relative to the spec file's directory.
+    bool validate = true;
+    std::vector<std::string> errors;  ///< Non-fatal parse warnings / errors.
 
     /// Converts this spec into a @ref PipelineBuildDesc for @ref IShaderPipelineBuilder.
     /// @param spec_dir Directory of the spec file; used to resolve include_paths.

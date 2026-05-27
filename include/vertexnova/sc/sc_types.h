@@ -151,20 +151,20 @@ struct CrossCompileRequest {
 
 /// Metal binding indices derived from SPIRV-Cross automatic slot assignment.
 struct MetalResourceSlot {
-    uint32_t buffer  = 0;  ///< [[buffer(N)]]
+    uint32_t buffer = 0;   ///< [[buffer(N)]]
     uint32_t texture = 0;  ///< [[texture(N)]]
     uint32_t sampler = 0;  ///< [[sampler(N)]]
 };
 
 /// WebGPU binding indices (mirrors Vulkan set/binding layout after WGSL cross-compile).
 struct WebGpuResourceSlot {
-    uint32_t group   = 0;  ///< @group(N)
+    uint32_t group = 0;    ///< @group(N)
     uint32_t binding = 0;  ///< @binding(N)
 };
 
 /// Per-binding backend slot assignments. std::nullopt means that backend was not compiled.
 struct ResourceBackendSlots {
-    std::optional<MetalResourceSlot>  metal;   ///< Populated when eMSL was a requested target.
+    std::optional<MetalResourceSlot> metal;    ///< Populated when eMSL was a requested target.
     std::optional<WebGpuResourceSlot> webgpu;  ///< Populated when eWGSL was a requested target.
 };
 

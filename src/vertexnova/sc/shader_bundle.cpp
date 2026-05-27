@@ -208,25 +208,39 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
     jrefl["stages"] = nlohmann::json::array();
     auto stageStr = [](ShaderStage s) -> std::string {
         switch (s) {
-            case ShaderStage::eVertex:                 return "vertex";
-            case ShaderStage::eFragment:               return "fragment";
-            case ShaderStage::eCompute:                return "compute";
-            case ShaderStage::eGeometry:               return "geometry";
-            case ShaderStage::eTessellationControl:    return "tess_control";
-            case ShaderStage::eTessellationEvaluation: return "tess_eval";
+            case ShaderStage::eVertex:
+                return "vertex";
+            case ShaderStage::eFragment:
+                return "fragment";
+            case ShaderStage::eCompute:
+                return "compute";
+            case ShaderStage::eGeometry:
+                return "geometry";
+            case ShaderStage::eTessellationControl:
+                return "tess_control";
+            case ShaderStage::eTessellationEvaluation:
+                return "tess_eval";
         }
         return "unknown";
     };
     auto resourceTypeStr = [](ReflectedResourceType t) -> std::string {
         switch (t) {
-            case ReflectedResourceType::eUniformBuffer:       return "uniform_buffer";
-            case ReflectedResourceType::eStorageBuffer:       return "storage_buffer";
-            case ReflectedResourceType::eSampledImage:        return "sampled_image";
-            case ReflectedResourceType::eStorageImage:        return "storage_image";
-            case ReflectedResourceType::eSampler:             return "sampler";
-            case ReflectedResourceType::ePushConstant:        return "push_constant";
-            case ReflectedResourceType::eCombinedImageSampler:return "combined_image_sampler";
-            case ReflectedResourceType::eSampledCubemap:      return "sampled_cubemap";
+            case ReflectedResourceType::eUniformBuffer:
+                return "uniform_buffer";
+            case ReflectedResourceType::eStorageBuffer:
+                return "storage_buffer";
+            case ReflectedResourceType::eSampledImage:
+                return "sampled_image";
+            case ReflectedResourceType::eStorageImage:
+                return "storage_image";
+            case ReflectedResourceType::eSampler:
+                return "sampler";
+            case ReflectedResourceType::ePushConstant:
+                return "push_constant";
+            case ReflectedResourceType::eCombinedImageSampler:
+                return "combined_image_sampler";
+            case ReflectedResourceType::eSampledCubemap:
+                return "sampled_cubemap";
         }
         return "unknown";
     };
@@ -240,36 +254,33 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
         js["bindings"] = nlohmann::json::array();
         for (const auto& b : stage.bindings) {
             nlohmann::json jb;
-            jb["name"]       = b.name;
-            jb["type"]       = resourceTypeStr(b.type);
-            jb["set"]        = b.set;
-            jb["binding"]    = b.binding;
+            jb["name"] = b.name;
+            jb["type"] = resourceTypeStr(b.type);
+            jb["set"] = b.set;
+            jb["binding"] = b.binding;
             jb["array_size"] = b.array_size;
             nlohmann::json jslots = nlohmann::json::object();
             if (b.slots.metal) {
-                jslots["metal"] = {{"buffer",  b.slots.metal->buffer},
+                jslots["metal"] = {{"buffer", b.slots.metal->buffer},
                                    {"texture", b.slots.metal->texture},
                                    {"sampler", b.slots.metal->sampler}};
             }
             if (b.slots.webgpu) {
-                jslots["webgpu"] = {{"group",   b.slots.webgpu->group},
-                                    {"binding", b.slots.webgpu->binding}};
+                jslots["webgpu"] = {{"group", b.slots.webgpu->group}, {"binding", b.slots.webgpu->binding}};
             }
             jb["slots"] = std::move(jslots);
             if (!b.struct_members.empty()) {
                 jb["struct_members"] = nlohmann::json::array();
                 for (const auto& m : b.struct_members) {
-                    jb["struct_members"].push_back({
-                        {"name",          m.name},
-                        {"offset",        m.offset},
-                        {"size",          m.size},
-                        {"array_count",   m.array_count},
-                        {"array_stride",  m.array_stride},
-                        {"is_matrix",     m.is_matrix},
-                        {"matrix_columns",m.matrix_columns},
-                        {"matrix_rows",   m.matrix_rows},
-                        {"type_name",     m.type_name}
-                    });
+                    jb["struct_members"].push_back({{"name", m.name},
+                                                    {"offset", m.offset},
+                                                    {"size", m.size},
+                                                    {"array_count", m.array_count},
+                                                    {"array_stride", m.array_stride},
+                                                    {"is_matrix", m.is_matrix},
+                                                    {"matrix_columns", m.matrix_columns},
+                                                    {"matrix_rows", m.matrix_rows},
+                                                    {"type_name", m.type_name}});
                 }
             }
             js["bindings"].push_back(std::move(jb));

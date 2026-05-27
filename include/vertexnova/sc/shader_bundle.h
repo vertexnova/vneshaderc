@@ -22,12 +22,12 @@ namespace vne::sc {
  */
 struct BundleStageFiles {
     ShaderStage stage = ShaderStage::eVertex;
-    std::string entry_point;      ///< SPIR-V / Vulkan entry point
+    std::string entry_point;  ///< SPIR-V / Vulkan entry point
     std::string spirv_file;
     std::string msl_file;
     std::string msl_entry_point;  ///< MSL entry (SPIRV-Cross may rename main→main0)
     std::string wgsl_file;
-    std::string wgsl_entry_point; ///< WGSL entry point
+    std::string wgsl_entry_point;  ///< WGSL entry point
 };
 
 /**

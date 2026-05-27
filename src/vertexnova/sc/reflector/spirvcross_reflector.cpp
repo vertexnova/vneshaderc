@@ -183,8 +183,8 @@ vne::sc::ShaderStageFlags stageToFlag(vne::sc::ShaderStage s) noexcept {
 namespace vne::sc {
 
 ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
-                                            ShaderStage stage,
-                                            const std::vector<CrossTarget>& targets) {
+                                           ShaderStage stage,
+                                           const std::vector<CrossTarget>& targets) {
     ReflectResult result;
 
     if (spirv.empty()) {
@@ -224,8 +224,8 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
 
         auto& bindings = sr.bindings;
 
-#define VNE_REFLECT_LIST(Type, list)                                                                          \
-    for (const auto& res : resources.list) {                                                                  \
+#define VNE_REFLECT_LIST(Type, list)                                                                                \
+    for (const auto& res : resources.list) {                                                                        \
         appendBinding<ReflectedResourceType::Type>(compiler, msl_compiler.get(), has_webgpu, res, stage, bindings); \
     }
 

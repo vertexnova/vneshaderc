@@ -82,8 +82,7 @@ std::shared_ptr<IShaderValidator> ShaderCompilerFactory::createValidator() {
 std::shared_ptr<IShaderPipelineBuilder> ShaderCompilerFactory::createPipelineBuilder(SourceLang lang) {
     auto frontend = createFrontEnd(lang);
     if (!frontend) {
-        VNE_LOG_ERROR << "ShaderCompilerFactory: no front-end available for source lang "
-                      << static_cast<int>(lang);
+        VNE_LOG_ERROR << "ShaderCompilerFactory: no front-end available for source lang " << static_cast<int>(lang);
         return nullptr;
     }
     VNE_LOG_DEBUG << "ShaderCompilerFactory: created pipeline builder for lang " << static_cast<int>(lang);
