@@ -25,18 +25,14 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.crosscompiler")
 
 namespace {
 
-// ── Metal binding constants (must match vnerhi MetalResourceBinder) ───────────
-constexpr uint32_t kFlattenBinding = 32u;
-constexpr uint32_t kMetalUboBase = 16u;
-
-inline uint32_t metalBufferSlot(uint32_t set, uint32_t binding) noexcept {
-    return kMetalUboBase + (set * kFlattenBinding + binding);
+inline uint32_t metalBufferSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return layout.buffer_base + (set * layout.flatten_stride + binding);
 }
-inline uint32_t metalTextureSlot(uint32_t set, uint32_t binding) noexcept {
-    return set * kFlattenBinding + binding;
+inline uint32_t metalTextureSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return set * layout.flatten_stride + binding;
 }
-inline uint32_t metalSamplerSlot(uint32_t set, uint32_t binding) noexcept {
-    return set * kFlattenBinding + binding;
+inline uint32_t metalSamplerSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return set * layout.flatten_stride + binding;
 }
 
 // ── Sampler index post-processing ─────────────────────────────────────────────
@@ -241,8 +237,8 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             mb.stage = exec_model;
             mb.desc_set = set;
             mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding);
-            mb.msl_sampler = metalSamplerSlot(set, binding);
+            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
+            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
             compiler.add_msl_resource_binding(mb);
         }
 
@@ -258,7 +254,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             mb.stage = exec_model;
             mb.desc_set = set;
             mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding);
+            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
             compiler.add_msl_resource_binding(mb);
         }
 
@@ -274,7 +270,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             mb.stage = exec_model;
             mb.desc_set = set;
             mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding);
+            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
             compiler.add_msl_resource_binding(mb);
         }
 
@@ -290,7 +286,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             mb.stage = exec_model;
             mb.desc_set = set;
             mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding);
+            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
             compiler.add_msl_resource_binding(mb);
         }
 
@@ -306,7 +302,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             mb.stage = exec_model;
             mb.desc_set = set;
             mb.binding = binding;
-            mb.msl_sampler = metalSamplerSlot(set, binding);
+            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
             compiler.add_msl_resource_binding(mb);
         }
 

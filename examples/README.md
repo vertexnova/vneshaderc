@@ -1,35 +1,30 @@
-# VneTemplate Examples
+# vnesc Examples
 
-This directory contains examples demonstrating the VneTemplate API.
+Examples demonstrating the vnesc offline shader compiler API. GLSL scenarios live under `glsl/`; future trees may add `hlsl/` or `slang/`.
 
-## Building Examples
+## Building
 
-From the project root (use `build/shared` or `build/static`):
+From the project root:
 
 ```bash
-# Shared library build
-cmake -B build/shared -DVNE_TEMPLATE_EXAMPLES=ON -DVNE_TEMPLATE_LIB_TYPE=shared
-cmake --build build/shared
-
-# Static library build
-cmake -B build/static -DVNE_TEMPLATE_EXAMPLES=ON -DVNE_TEMPLATE_LIB_TYPE=static
-cmake --build build/static
+cmake -B build -DVNE_SC_GLSLANG=ON -DVNE_SC_EXAMPLES=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --target \
+    vnesc_example_01_hello_compiler \
+    vnesc_example_02_triangle_bundle \
+    vnesc_example_03_textured_pipeline_spec
 ```
 
-Alternatively, `-DVNE_TEMPLATE_DEV=ON` enables both tests and examples.
+Executables are under `build/bin/examples/glsl/<example>/`.
 
-Executables are placed in `build/shared/bin/examples/` (or `build/static/bin/examples/`).
+## Examples
 
-## Available Examples
+| Example | Focus |
+|---------|--------|
+| [glsl/01_hello_compiler](glsl/01_hello_compiler/) | Inline GLSL → MSL, `PipelineBuildDesc` |
+| [glsl/02_triangle_bundle](glsl/02_triangle_bundle/) | File-based shaders, reflection dump, bundle I/O |
+| [glsl/03_textured_pipeline_spec](glsl/03_textured_pipeline_spec/) | `.pipeline.json` spec, `MetalBindingLayout` |
 
-### 01_hello_template — Getting Started
+## Shared utilities
 
-Minimal usage: call `vne::template_ns::hello()` and `get_version()`.
-
-**Run:** `./build/<lib_type>/bin/examples/example_01_hello_template` (use `shared` or `static` to match your build)
-
-## Quick Reference
-
-| Example              | Focus          | Key Concepts              |
-|----------------------|----------------|---------------------------|
-| 01_hello_template    | Getting started| hello(), get_version()   |
+- `common/shader_loader.h` — load a shader file into a `std::string`
+- `common/logging_guard.h` — optional vnelogging RAII helper (requires `vnelogging` submodule)

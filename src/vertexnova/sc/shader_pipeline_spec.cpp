@@ -78,6 +78,7 @@ PipelineBuildDesc ShaderPipelineSpec::toBuildDesc(const std::filesystem::path& s
     desc.name = name;
     desc.validate = validate;
     desc.targets = targets;
+    desc.metal_layout = metal_layout;
 
     // Resolve include_paths relative to spec_dir (if provided).
     std::vector<std::string> resolved_includes;
@@ -91,7 +92,11 @@ PipelineBuildDesc ShaderPipelineSpec::toBuildDesc(const std::filesystem::path& s
 
     for (const auto& ss : stages) {
         CompileRequest req;
-        req.file_path = ss.file;
+        if (!spec_dir.empty()) {
+            req.file_path = (spec_dir / ss.file).lexically_normal().string();
+        } else {
+            req.file_path = ss.file;
+        }
         req.entry_point = ss.entry_point;
         req.stage = ss.stage;
         req.lang = source_lang;
@@ -146,6 +151,16 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
                 if (p.is_string()) {
                     spec.include_paths.push_back(p.get<std::string>());
                 }
+            }
+        }
+
+        if (doc.contains("metal_layout") && doc["metal_layout"].is_object()) {
+            const auto& ml = doc["metal_layout"];
+            if (ml.contains("flatten_stride") && ml["flatten_stride"].is_number_unsigned()) {
+                spec.metal_layout.flatten_stride = ml["flatten_stride"].get<uint32_t>();
+            }
+            if (ml.contains("buffer_base") && ml["buffer_base"].is_number_unsigned()) {
+                spec.metal_layout.buffer_base = ml["buffer_base"].get<uint32_t>();
             }
         }
 

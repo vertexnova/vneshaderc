@@ -43,6 +43,7 @@ struct ShaderPipelineSpec {
     std::vector<CrossTarget> targets;
     std::vector<std::string> include_paths;  ///< Resolved relative to the spec file's directory.
     bool validate = true;
+    MetalBindingLayout metal_layout;  ///< Optional override; defaults match vnerhi.
     std::vector<std::string> errors;  ///< Non-fatal parse warnings / errors.
 
     /// Converts this spec into a @ref PipelineBuildDesc for @ref IShaderPipelineBuilder.

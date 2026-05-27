@@ -66,6 +66,38 @@ target_link_libraries(your_target PRIVATE vnesc vnesc_glslang)
 
 > When used as a dependency, tests and examples are off by default (`VNE_SC_TESTS=OFF`, `VNE_SC_EXAMPLES=OFF`).
 
+## Using vnesc as a library
+
+### CMake integration
+
+```cmake
+target_link_libraries(your_target PRIVATE
+    vnesc          # core: cache, factory, pipeline builder, bundle I/O
+    vnesc_glslang) # glslang GLSL → SPIR-V front-end (required for GLSL source)
+```
+
+`vnesc` carries the public headers, SPIRV-Cross cross-compiler, reflector, and bundle writer.
+`vnesc_glslang` adds the GLSL → SPIR-V front-end; omit it only if you supply SPIR-V directly.
+
+### Single umbrella include
+
+```cpp
+#include <vertexnova/sc/vnesc.h>
+```
+
+### Key types at a glance
+
+| Header | Key types |
+|--------|-----------|
+| `sc_types.h` | `ShaderStage`, `CrossTarget`, `SourceLang`, `CompileRequest`, `CrossCompileRequest`, `MetalBindingLayout` |
+| `shader_pipeline_builder.h` | `PipelineBuildDesc`, `PipelineBuildResult` |
+| `shader_pipeline_spec.h` | `ShaderPipelineSpec`, `loadShaderPipelineSpec()` |
+| `shader_compiler_factory.h` | `ShaderCompilerFactory` |
+| `shader_bundle.h` | `writeShaderBundle()`, `readShaderBundle()` |
+| `shader_artifact.h` | `ShaderArtifact`, `StageArtifact`, `CrossCompiledSource` |
+
+Tooling details: [tools/README.md](tools/README.md). Examples: [examples/](examples/).
+
 ## Building
 
 ```bash
@@ -193,16 +225,25 @@ if (spec) {
 
 `include_paths` entries are resolved relative to the spec file's directory and forwarded as `#include` search paths to glslang.
 
+Optional Metal binding layout (defaults match vnerhi):
+
+```json
+"metal_layout": {
+  "flatten_stride": 32,
+  "buffer_base": 16
+}
+```
+
 ## CLI tool
 
+See [tools/README.md](tools/README.md) for full flag documentation.
+
 ```bash
-# Compile one pipeline spec → .vneshader bundle
 vnesc_shader_compiler \
     --manifest shaders/src/mesh_phong.pipeline.json \
-    --output   output/bundles \
+    --output   output/bundles/mesh_phong \
     --cache    .shader_cache
 
-# Batch-compile with the Python wrapper (parallel, glob-aware)
 python3 tools/compile_shaders.py \
     --manifest "shaders/src/**/*.pipeline.json" \
     --output   output/bundles \

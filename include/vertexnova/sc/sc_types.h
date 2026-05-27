@@ -139,6 +139,15 @@ struct CompileRequest {
     uint32_t glsl_version = 450;            ///< GLSL version number (e.g. 450 → @c #version 450).
 };
 
+/// Metal buffer-index layout configuration.
+/// Controls how Vulkan descriptor set/binding pairs map to MSL [[buffer(N)]],
+/// [[texture(N)]], and [[sampler(N)]] indices.
+/// Defaults reproduce the vnerhi MetalResourceBinder layout.
+struct MetalBindingLayout {
+    uint32_t flatten_stride = 32u;  ///< Stride: set * stride + binding.
+    uint32_t buffer_base = 16u;     ///< [[buffer(N)]] = buffer_base + set * stride + binding.
+};
+
 /**
  * @brief Describes a single SPIR-V → target cross-compilation job.
  */
@@ -149,6 +158,7 @@ struct CrossCompileRequest {
     uint32_t msl_version = 30000;  ///< MSL version (e.g. 30000 → Metal 3.0).
     uint32_t glsl_version = 450;
     bool fix_msl_fragment_signature = true;  ///< Align fragment stage_in with vertex output.
+    MetalBindingLayout metal_layout;         ///< MSL binding offsets (defaults match vnerhi).
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

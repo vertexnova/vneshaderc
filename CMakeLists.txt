@@ -254,6 +254,18 @@ if(ENABLE_DOXYGEN)
 endif()
 
 #==============================================================================
+# CPack (ZIP/TGZ release archives)
+#==============================================================================
+set(CPACK_PACKAGE_NAME         "vnesc")
+set(CPACK_PACKAGE_VERSION      "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_VENDOR       "VertexNova")
+set(CPACK_GENERATOR            "ZIP;TGZ")
+set(CPACK_COMPONENTS_ALL       vnesc vnesc_tools)
+set(CPACK_COMPONENT_VNESC_DISPLAY_NAME       "vnesc library + headers")
+set(CPACK_COMPONENT_VNESC_TOOLS_DISPLAY_NAME "vnesc CLI tools")
+include(CPack)
+
+#==============================================================================
 # Installation
 #==============================================================================
 include(InstallRules)

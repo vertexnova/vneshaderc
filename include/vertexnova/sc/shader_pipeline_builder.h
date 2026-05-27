@@ -44,6 +44,7 @@ struct PipelineBuildDesc {
     bool validate = true;                ///< Run SPIR-V validation after compilation.
     bool use_cache = true;               ///< Enable the file-based artifact cache.
     std::string cache_dir;               ///< Cache root directory; empty disables caching.
+    MetalBindingLayout metal_layout;     ///< Propagated to cross-compiler and reflector.
 };
 
 /**

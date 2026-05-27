@@ -36,3 +36,17 @@ install(DIRECTORY include/vertexnova/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova
     COMPONENT vnesc
     FILES_MATCHING PATTERN "*.h")
+
+# ── CLI tool ──────────────────────────────────────────────────────────────────
+if(VNE_SC_TOOLS AND TARGET vnesc_shader_compiler)
+    install(TARGETS vnesc_shader_compiler
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT vnesc_tools)
+endif()
+
+# ── Python batch wrapper ──────────────────────────────────────────────────────
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/compile_shaders.py")
+    install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/tools/compile_shaders.py"
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT vnesc_tools)
+endif()

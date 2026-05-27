@@ -42,7 +42,8 @@ class IShaderReflector {
      */
     virtual ReflectResult reflect(const std::vector<uint32_t>& spirv,
                                   ShaderStage stage,
-                                  const std::vector<CrossTarget>& targets = {}) = 0;
+                                  const std::vector<CrossTarget>& targets = {},
+                                  MetalBindingLayout metal_layout = {}) = 0;
 };
 
 }  // namespace vne::sc

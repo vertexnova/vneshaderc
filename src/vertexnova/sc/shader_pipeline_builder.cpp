@@ -111,7 +111,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
 
         // ── 3. Reflect ────────────────────────────────────────────────────
         if (reflector_) {
-            ReflectResult rr = reflector_->reflect(stage_artifact.spirv, req.stage, desc.targets);
+            ReflectResult rr = reflector_->reflect(stage_artifact.spirv, req.stage, desc.targets, desc.metal_layout);
             if (rr.ok()) {
                 stage_artifact.reflection = std::move(rr.reflection);
             } else {
@@ -132,6 +132,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                 ccr.spirv = stage_artifact.spirv;
                 ccr.target = target;
                 ccr.stage = req.stage;
+                ccr.metal_layout = desc.metal_layout;
 
                 CrossCompileResult ccres = cross_compiler_->crossCompile(ccr);
                 if (ccres.ok()) {

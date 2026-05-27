@@ -30,7 +30,8 @@ class SpirvCrossReflector final : public IShaderReflector {
    public:
     ReflectResult reflect(const std::vector<uint32_t>& spirv,
                           ShaderStage stage,
-                          const std::vector<CrossTarget>& targets = {}) override;
+                          const std::vector<CrossTarget>& targets = {},
+                          MetalBindingLayout metal_layout = {}) override;
 };
 
 }  // namespace vne::sc

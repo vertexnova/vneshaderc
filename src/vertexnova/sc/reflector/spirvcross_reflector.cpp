@@ -27,18 +27,14 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.reflector")
 
 namespace {
 
-// ── Metal binding constants (must match kFlattenBinding / kMetalUboBase in cross-compiler) ──
-constexpr uint32_t kFlattenBinding = 32u;
-constexpr uint32_t kMetalUboBase = 16u;
-
-inline uint32_t metalBuf(uint32_t set, uint32_t binding) noexcept {
-    return kMetalUboBase + (set * kFlattenBinding + binding);
+inline uint32_t metalBuf(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return layout.buffer_base + (set * layout.flatten_stride + binding);
 }
-inline uint32_t metalTex(uint32_t set, uint32_t binding) noexcept {
-    return set * kFlattenBinding + binding;
+inline uint32_t metalTex(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return set * layout.flatten_stride + binding;
 }
-inline uint32_t metalSmp(uint32_t set, uint32_t binding) noexcept {
-    return set * kFlattenBinding + binding;
+inline uint32_t metalSmp(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
+    return set * layout.flatten_stride + binding;
 }
 
 // ── Reflect struct members from a SPIRV-Cross block type ─────────────────────
@@ -74,6 +70,7 @@ template<vne::sc::ReflectedResourceType Type>
 void appendBinding(const spirv_cross::Compiler& compiler,
                    const spirv_cross::CompilerMSL* msl,  // nullptr → MSL not a target
                    bool has_webgpu,
+                   const vne::sc::MetalBindingLayout& layout,
                    const spirv_cross::Resource& res,
                    std::vector<vne::sc::ReflectedBindingInfo>& out) {
     using namespace vne::sc;
@@ -124,10 +121,10 @@ void appendBinding(const spirv_cross::Compiler& compiler,
             // Deterministic fallback formula when SPIRV-Cross auto-binding unavailable
             if constexpr (Type == ReflectedResourceType::eUniformBuffer
                           || Type == ReflectedResourceType::eStorageBuffer) {
-                metal.buffer = metalBuf(set, binding);
+                metal.buffer = metalBuf(set, binding, layout);
             } else {
-                metal.texture = metalTex(set, binding);
-                metal.sampler = metalSmp(set, binding);
+                metal.texture = metalTex(set, binding, layout);
+                metal.sampler = metalSmp(set, binding, layout);
             }
         }
         slots.metal = metal;
@@ -185,7 +182,8 @@ namespace vne::sc {
 
 ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
                                            ShaderStage stage,
-                                           const std::vector<CrossTarget>& targets) {
+                                           const std::vector<CrossTarget>& targets,
+                                           MetalBindingLayout metal_layout) {
     ReflectResult result;
 
     if (spirv.empty()) {
@@ -227,7 +225,7 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
 
 #define VNE_REFLECT_LIST(Type, list)                                                                                \
     for (const auto& res : resources.list) {                                                                        \
-        appendBinding<ReflectedResourceType::Type>(compiler, msl_compiler.get(), has_webgpu, res, bindings); \
+        appendBinding<ReflectedResourceType::Type>(compiler, msl_compiler.get(), has_webgpu, metal_layout, res, bindings); \
     }
 
         VNE_REFLECT_LIST(eUniformBuffer, uniform_buffers)
