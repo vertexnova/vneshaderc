@@ -223,9 +223,14 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
 
         auto& bindings = sr.bindings;
 
-#define VNE_REFLECT_LIST(Type, list)                                                                                \
-    for (const auto& res : resources.list) {                                                                        \
-        appendBinding<ReflectedResourceType::Type>(compiler, msl_compiler.get(), has_webgpu, metal_layout, res, bindings); \
+#define VNE_REFLECT_LIST(Type, list)                                   \
+    for (const auto& res : resources.list) {                           \
+        appendBinding<ReflectedResourceType::Type>(compiler,           \
+                                                   msl_compiler.get(), \
+                                                   has_webgpu,         \
+                                                   metal_layout,       \
+                                                   res,                \
+                                                   bindings);          \
     }
 
         VNE_REFLECT_LIST(eUniformBuffer, uniform_buffers)
