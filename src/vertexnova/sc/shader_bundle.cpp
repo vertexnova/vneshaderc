@@ -209,8 +209,7 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
 
     // Human-readable reflection alongside reflection.bin
     const ProgramReflection& refl = reflection;
-    nlohmann::json jrefl;
-    jrefl["stages"] = nlohmann::json::array();
+
     auto stageStr = [](ShaderStage s) -> std::string {
         switch (s) {
             case ShaderStage::eVertex:
@@ -249,49 +248,95 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
         }
         return "unknown";
     };
+
+    // stages is an object keyed by stage name for O(1) lookup in consumers
+    nlohmann::json jrefl;
+    nlohmann::json jstages = nlohmann::json::object();
     for (const auto& stage : refl.stages) {
         nlohmann::json js;
-        js["stage"] = stageStr(stage.stage);
-        js["push_constant_size"] = stage.push_constant_size;
-        js["workgroup_size"] = {{"x", stage.workgroup_size.x},
-                                {"y", stage.workgroup_size.y},
-                                {"z", stage.workgroup_size.z}};
         js["bindings"] = nlohmann::json::array();
+
         for (const auto& b : stage.bindings) {
             nlohmann::json jb;
             jb["name"] = b.name;
             jb["type"] = resourceTypeStr(b.type);
-            jb["set"] = b.set;
-            jb["binding"] = b.binding;
-            jb["array_size"] = b.array_size;
-            nlohmann::json jslots = nlohmann::json::object();
+            if (b.array_size != 1)
+                jb["array_size"] = b.array_size;
+
+            // Canonical Vulkan set/binding
+            jb["vulkan"] = {{"set", b.set}, {"binding", b.binding}};
+
+            // Type-aware Metal slot — only emit fields meaningful for this resource type
             if (b.slots.metal) {
-                jslots["metal"] = {{"buffer", b.slots.metal->buffer},
-                                   {"texture", b.slots.metal->texture},
-                                   {"sampler", b.slots.metal->sampler}};
-            }
-            if (b.slots.webgpu) {
-                jslots["webgpu"] = {{"group", b.slots.webgpu->group}, {"binding", b.slots.webgpu->binding}};
-            }
-            jb["slots"] = std::move(jslots);
-            if (!b.struct_members.empty()) {
-                jb["struct_members"] = nlohmann::json::array();
-                for (const auto& m : b.struct_members) {
-                    jb["struct_members"].push_back({{"name", m.name},
-                                                    {"offset", m.offset},
-                                                    {"size", m.size},
-                                                    {"array_count", m.array_count},
-                                                    {"array_stride", m.array_stride},
-                                                    {"is_matrix", m.is_matrix},
-                                                    {"matrix_columns", m.matrix_columns},
-                                                    {"matrix_rows", m.matrix_rows},
-                                                    {"type_name", m.type_name}});
+                nlohmann::json jm;
+                switch (b.type) {
+                    case ReflectedResourceType::eUniformBuffer:
+                    case ReflectedResourceType::eStorageBuffer:
+                        jm["buffer"] = b.slots.metal->buffer;
+                        break;
+                    case ReflectedResourceType::eCombinedImageSampler:
+                        jm["texture"] = b.slots.metal->texture;
+                        jm["sampler"] = b.slots.metal->sampler;
+                        break;
+                    case ReflectedResourceType::eSampledImage:
+                    case ReflectedResourceType::eSampledCubemap:
+                    case ReflectedResourceType::eStorageImage:
+                        jm["texture"] = b.slots.metal->texture;
+                        break;
+                    case ReflectedResourceType::eSampler:
+                        jm["sampler"] = b.slots.metal->sampler;
+                        break;
+                    default:
+                        break;
                 }
+                if (!jm.empty())
+                    jb["metal"] = std::move(jm);
             }
+
+            // WebGPU slot — only present when WGSL was a compilation target
+            if (b.slots.webgpu) {
+                jb["webgpu"] = {{"group", b.slots.webgpu->group}, {"binding", b.slots.webgpu->binding}};
+            }
+
+            // Struct members for buffer types — omit noise fields when at defaults
+            if (!b.struct_members.empty()) {
+                nlohmann::json jmembers = nlohmann::json::array();
+                for (const auto& m : b.struct_members) {
+                    nlohmann::json jmem;
+                    jmem["name"] = m.name;
+                    jmem["offset"] = m.offset;
+                    jmem["size"] = m.size;
+                    if (m.array_count > 1)
+                        jmem["array_count"] = m.array_count;
+                    if (m.array_stride > 0)
+                        jmem["array_stride"] = m.array_stride;
+                    if (m.is_matrix) {
+                        jmem["matrix_columns"] = m.matrix_columns;
+                        jmem["matrix_rows"] = m.matrix_rows;
+                    }
+                    if (!m.type_name.empty())
+                        jmem["type"] = m.type_name;
+                    jmembers.push_back(std::move(jmem));
+                }
+                jb["members"] = std::move(jmembers);
+            }
+
             js["bindings"].push_back(std::move(jb));
         }
-        jrefl["stages"].push_back(std::move(js));
+
+        // push_constants only when non-zero
+        if (stage.push_constant_size > 0)
+            js["push_constants"] = stage.push_constant_size;
+        // workgroup_size only for compute stages
+        if (stage.stage == ShaderStage::eCompute) {
+            js["workgroup_size"] = {{"x", stage.workgroup_size.x},
+                                    {"y", stage.workgroup_size.y},
+                                    {"z", stage.workgroup_size.z}};
+        }
+
+        jstages[stageStr(stage.stage)] = std::move(js);
     }
+    jrefl["stages"] = std::move(jstages);
     writeTextFile(bundle_dir / "reflection.json", jrefl.dump(2));
 #endif
 

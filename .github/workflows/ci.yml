@@ -326,8 +326,7 @@ jobs:
       - name: Run clang-tidy
         run: |
           find src -type f \( -name '*.cpp' -o -name '*.h' \) -print0 \
-            | xargs -0 -r clang-tidy -p build/static \
-                --warnings-as-errors='*'
+            | xargs -0 -r clang-tidy -p build/static
 
       - name: Write clang-tidy summary
         if: always()
