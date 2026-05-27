@@ -268,12 +268,12 @@ jobs:
         if: runner.os == 'Linux' && inputs.enable_coverage
         run: |
           lcov --capture --directory "$BUILD_DIR" --output-file coverage.info \
-            --ignore-errors mismatch,unused,empty
+            --ignore-errors mismatch,unused,empty,source
           lcov --remove coverage.info \
             '/usr/*' '*/tests/*' '*/deps/external/*' '*/deps/internal/*' \
             '*/_deps/*' '*/googletest/*' '*/googlemock/*' \
-            --output-file coverage.info --ignore-errors mismatch,unused
-          lcov --list coverage.info --ignore-errors mismatch,unused
+            --output-file coverage.info --ignore-errors mismatch,unused,source
+          lcov --list coverage.info --ignore-errors mismatch,unused,source
 
       - name: Generate HTML coverage report
         if: runner.os == 'Linux' && inputs.enable_coverage
