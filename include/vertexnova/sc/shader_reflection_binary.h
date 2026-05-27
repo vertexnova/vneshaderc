@@ -1,12 +1,19 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
 /**
  * @file shader_reflection_binary.h
  * @brief Binary serialization for @ref StageReflection and @ref ProgramReflection.
- *
- * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License").
  */
-
-#pragma once
 
 #include "sc_types.h"
 

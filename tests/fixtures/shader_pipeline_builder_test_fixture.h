@@ -2,8 +2,16 @@
 /* ---------------------------------------------------------------------
  * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
- * @file fixtures/shader_pipeline_builder_test_fixture.h — helpers for ShaderPipelineBuilder tests.
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file fixtures/shader_pipeline_builder_test_fixture.h — helpers for ShaderPipelineBuilder tests.
  */
 
 #include <filesystem>

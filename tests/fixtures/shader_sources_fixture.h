@@ -2,8 +2,16 @@
 /* ---------------------------------------------------------------------
  * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
- * @file fixtures/shader_sources_fixture.h — shared GLSL sources for integration tests.
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file fixtures/shader_sources_fixture.h — shared GLSL sources for integration tests.
  */
 
 #include <gtest/gtest.h>

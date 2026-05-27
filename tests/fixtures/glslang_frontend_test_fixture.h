@@ -2,8 +2,16 @@
 /* ---------------------------------------------------------------------
  * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License")
- * @file fixtures/glslang_frontend_test_fixture.h — base fixture for GlslangFrontEnd tests.
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
  * ----------------------------------------------------------------------
+ */
+
+/**
+ * @file fixtures/glslang_frontend_test_fixture.h — base fixture for GlslangFrontEnd tests.
  */
 
 #include "fixtures/shader_sources_fixture.h"

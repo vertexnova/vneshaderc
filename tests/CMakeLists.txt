@@ -37,7 +37,7 @@ if(VNE_SC_GLSLANG)
     list(APPEND VNESC_TEST_SOURCES
         glslang_frontend_test.cpp
         spirvcross_reflector_test.cpp
-        dispatch_cross_compiler_test.cpp
+        shader_cross_compiler_test.cpp
         shader_pipeline_builder_test.cpp
         shader_bundle_test.cpp
         shader_pipeline_spec_includes_test.cpp)

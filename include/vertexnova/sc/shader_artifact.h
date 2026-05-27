@@ -1,16 +1,22 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
 /**
  * @file shader_artifact.h
  * @brief Output types produced by the shader compilation pipeline.
- *
  * A @ref ShaderArtifact bundles every compiler output for a complete shader
  * program: SPIR-V binaries, cross-compiled source texts, and typed binding
  * reflection data for each pipeline stage.
- *
- * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License").
  */
-
-#pragma once
 
 #include "sc_types.h"
 

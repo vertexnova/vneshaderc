@@ -1,14 +1,20 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
 /**
  * @file noop_validator.h
  * @brief No-op SPIR-V validator that always reports success.
- *
  * Used when the SPIRV-Tools validation library is not compiled in.
- *
- * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License").
  */
-
-#pragma once
 
 #include "vertexnova/sc/shader_validator.h"
 

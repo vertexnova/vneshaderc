@@ -1,16 +1,22 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
 /**
  * @file shader_artifact_cache.h
  * @brief File-based cache for compiled shader stage artifacts.
- *
  * Each artifact is stored in a separate file under a configured directory.
  * Cache keys are 64-bit FNV-1a hashes of the compile request parameters
  * formatted as 16-character hex strings.
- *
- * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License").
  */
-
-#pragma once
 
 #include "sc_result.h"
 #include "shader_artifact.h"

@@ -1,15 +1,20 @@
+#pragma once
+/* ---------------------------------------------------------------------
+ * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
+ * Licensed under the Apache License, Version 2.0 (the "License")
+ *
+ * Author:    Ajeet Singh Yadav
+ * Created:   May 2026
+ *
+ * Autodoc:   yes
+ * ----------------------------------------------------------------------
+ */
+
 /**
  * @file slang_frontend.h
  * @brief Slang front-end: compiles Slang source to SPIR-V.
- *
  * @note SFI — stub implementation.  @ref isAvailable returns @c false and
- *       @ref compile returns @ref ResultCode::eUnavailable until Slang is wired in.
- *
- * Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
- * Licensed under the Apache License, Version 2.0 (the "License").
  */
-
-#pragma once
 
 #include "vertexnova/sc/shader_frontend.h"
 

@@ -23,9 +23,9 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.factory")
 #include "frontend/glslang_frontend.h"
 #include "frontend/dxc_frontend.h"
 #include "frontend/slang_frontend.h"
+#include "crosscompiler/shader_cross_compiler.h"
 #include "crosscompiler/spirvcross_cross_compiler.h"
 #include "crosscompiler/tint_cross_compiler.h"
-#include "crosscompiler/dispatch_cross_compiler.h"
 #include "reflector/spirvcross_reflector.h"
 
 #ifdef VNE_SC_SPIRVTOOLS_ENABLED
@@ -64,7 +64,7 @@ std::shared_ptr<IShaderCrossCompiler> ShaderCompilerFactory::createTintCrossComp
 }
 
 std::shared_ptr<IShaderCrossCompiler> ShaderCompilerFactory::createCrossCompiler() {
-    return std::make_shared<DispatchCrossCompiler>(createSpirvCrossCrossCompiler(), createTintCrossCompiler());
+    return std::make_shared<ShaderCrossCompiler>();
 }
 
 std::shared_ptr<IShaderReflector> ShaderCompilerFactory::createReflector() {
