@@ -54,9 +54,16 @@ TEST_F(ShaderArtifactCacheTest, DifferentMetalLayoutProducesDifferentKey) {
     req.source = "void main() {}";
     std::vector<CrossTarget> targets = {CrossTarget::eMSL};
     MetalBindingLayout defaults;
-    MetalBindingLayout custom;
-    custom.buffer_base = 0;
-    EXPECT_NE(ShaderArtifactCache::makeKey(req, targets, defaults), ShaderArtifactCache::makeKey(req, targets, custom));
+    MetalBindingLayout custom_buffer = defaults;
+    custom_buffer.buffer_base = defaults.buffer_base + 1u;
+
+    MetalBindingLayout custom_stride = defaults;
+    custom_stride.flatten_stride = defaults.flatten_stride + 1u;
+
+    EXPECT_NE(ShaderArtifactCache::makeKey(req, targets, defaults),
+              ShaderArtifactCache::makeKey(req, targets, custom_buffer));
+    EXPECT_NE(ShaderArtifactCache::makeKey(req, targets, defaults),
+              ShaderArtifactCache::makeKey(req, targets, custom_stride));
 }
 
 TEST_F(ShaderArtifactCacheTest, StoreAndLookupRoundTrip) {

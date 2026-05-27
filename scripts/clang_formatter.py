@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Clang formatter for C/C++. Same scope as CI (src, include, samples, tests).
+Clang formatter for C/C++. Same scope as CI (src, include, examples, tools, tests).
 
 Usage (from repo root; use ``python3`` so PATH is yours, not the kernel's):
     python3 scripts/clang_formatter.py all --dry-run
@@ -118,7 +118,7 @@ def main():
         nargs="?",
         default=None,
         metavar="FOLDER_OR_ALL",
-        help='Folder to format recursively, or "all" for CI dirs (src, include, samples, tests). '
+        help='Folder to format recursively, or "all" for CI dirs (src, include, examples, tools, tests). '
         "Alternative to --folder / --file.",
     )
     parser.add_argument(
