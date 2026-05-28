@@ -41,8 +41,8 @@ def vnesc_cmake_args(args: argparse.Namespace) -> list[str]:
         f"-DVNE_SC_EXAMPLES={'ON' if examples else 'OFF'}",
         f"-DVNE_SC_GLSLANG={'OFF' if args.no_glslang else 'ON'}",
         f"-DVNE_SC_JSON={'OFF' if args.no_json else 'ON'}",
-        f"-DVNE_SC_TINT={'ON' if args.with_tint else 'OFF'}",
-        f"-DVNE_SC_SPIRVTOOLS={'ON' if args.with_spirvtools else 'OFF'}",
+        f"-DVNE_SC_TINT={'OFF' if args.no_tint else 'ON'}",
+        f"-DVNE_SC_SPIRVTOOLS={'OFF' if args.no_spirvtools else 'ON'}",
         f"-DWARNINGS_AS_ERRORS={'ON' if args.werror else 'OFF'}",
     ]
 
@@ -62,8 +62,12 @@ def main() -> None:
     parser.add_argument("--no-tests", action="store_false", dest="with_tests")
     parser.add_argument("--with-examples", action="store_true", default=None)
     parser.add_argument("--no-examples", action="store_false", dest="with_examples")
-    parser.add_argument("--with-tint", action="store_true")
-    parser.add_argument("--with-spirvtools", action="store_true")
+    parser.add_argument("--with-tint", action="store_true",
+                        help="VNE_SC_TINT=ON (enabled by default)")
+    parser.add_argument("--with-spirvtools", action="store_true",
+                        help="VNE_SC_SPIRVTOOLS=ON (enabled by default)")
+    parser.add_argument("--no-tint", action="store_true", help="VNE_SC_TINT=OFF")
+    parser.add_argument("--no-spirvtools", action="store_true", help="VNE_SC_SPIRVTOOLS=OFF")
     parser.add_argument("--no-glslang", action="store_true")
     parser.add_argument("--no-json", action="store_true")
     parser.add_argument("--werror", action="store_true")

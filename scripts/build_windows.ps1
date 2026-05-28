@@ -21,6 +21,8 @@ param(
     [switch]$NoExamples,
     [switch]$WithTint,
     [switch]$WithSpirvTools,
+    [switch]$NoTint,
+    [switch]$NoSpirvTools,
     [switch]$NoGlslang,
     [switch]$NoJson,
     [switch]$Werror
@@ -53,8 +55,8 @@ $CmakeFlags = @(
     "-DVNE_SC_EXAMPLES=$examplesOn",
     "-DVNE_SC_GLSLANG=$(if ($NoGlslang) { 'OFF' } else { 'ON' })",
     "-DVNE_SC_JSON=$(if ($NoJson) { 'OFF' } else { 'ON' })",
-    "-DVNE_SC_TINT=$(if ($WithTint) { 'ON' } else { 'OFF' })",
-    "-DVNE_SC_SPIRVTOOLS=$(if ($WithSpirvTools) { 'ON' } else { 'OFF' })",
+    "-DVNE_SC_TINT=$(if ($NoTint) { 'OFF' } else { 'ON' })",
+    "-DVNE_SC_SPIRVTOOLS=$(if ($NoSpirvTools) { 'OFF' } else { 'ON' })",
     "-DWARNINGS_AS_ERRORS=$(if ($Werror) { 'ON' } else { 'OFF' })"
 )
 
@@ -85,7 +87,7 @@ switch ($Action) {
         & ctest @TestArgs
     }
     default {
-        Write-Host "Usage: .\build_windows.ps1 [-BuildType Debug|Release|...] [-Action ...] [-Clean] [-Jobs N] [-Dev] [-NoTests] [-NoExamples] [-WithTint] ..."
+        Write-Host "Usage: .\build_windows.ps1 [-BuildType Debug|Release|...] [-Action ...] [-Clean] [-Jobs N] [-Dev] [-NoTests] [-NoExamples] [-NoTint] [-NoSpirvTools] ..."
         exit 1
     }
 }

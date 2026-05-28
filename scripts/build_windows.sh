@@ -27,7 +27,8 @@ usage() {
   echo "Usage: $0 [-t <build_type>] [-a <action>] [-clean] [-j <jobs>] [vnesc options]"
   echo "  -t <build_type>  Debug|Release|RelWithDebInfo|MinSizeRel"
   echo "  -a <action>      configure|build|configure_and_build|test"
-  echo "  --dev --with-tests --no-tests --with-examples --with-tint --werror ..."
+  echo "  --dev --with-tests --no-tests --with-examples --no-tint --no-spirvtools --werror ..."
+  echo "  (Tint and SPIRV-Tools are ON by default)"
   exit 1
 }
 
@@ -37,8 +38,8 @@ CLEAN_BUILD=false
 WITH_DEV=true
 WITH_TESTS=
 WITH_EXAMPLES=
-WITH_TINT=false
-WITH_SPIRVTOOLS=false
+WITH_TINT=true
+WITH_SPIRVTOOLS=true
 WITH_GLSLANG=true
 WITH_JSON=true
 WARNINGS_AS_ERRORS=false
@@ -56,6 +57,8 @@ while [[ $# -gt 0 ]]; do
     --no-examples) WITH_EXAMPLES=false; shift ;;
     --with-tint) WITH_TINT=true; shift ;;
     --with-spirvtools) WITH_SPIRVTOOLS=true; shift ;;
+    --no-tint) WITH_TINT=false; shift ;;
+    --no-spirvtools) WITH_SPIRVTOOLS=false; shift ;;
     --no-glslang) WITH_GLSLANG=false; shift ;;
     --no-json) WITH_JSON=false; shift ;;
     --werror) WARNINGS_AS_ERRORS=true; shift ;;

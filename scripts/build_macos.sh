@@ -34,7 +34,8 @@ usage() {
   echo "  -xcode-only      Configure Xcode project only"
   echo ""
   echo "vnesc options: --dev --with-tests --no-tests --with-examples --no-examples"
-  echo "               --with-tint --with-spirvtools --no-glslang --no-json --werror"
+  echo "               --no-tint --no-spirvtools --no-glslang --no-json --werror"
+  echo "               (Tint and SPIRV-Tools are ON by default)"
   exit 1
 }
 
@@ -47,8 +48,8 @@ WITH_TESTS=true
 WITH_EXAMPLES=false
 TESTS_EXPLICIT=false
 EXAMPLES_EXPLICIT=false
-WITH_TINT=false
-WITH_SPIRVTOOLS=false
+WITH_TINT=true
+WITH_SPIRVTOOLS=true
 WITH_GLSLANG=true
 WITH_JSON=true
 WARNINGS_AS_ERRORS=false
@@ -67,6 +68,8 @@ while [[ $# -gt 0 ]]; do
     --no-examples) WITH_EXAMPLES=false; EXAMPLES_EXPLICIT=true; shift ;;
     --with-tint) WITH_TINT=true; shift ;;
     --with-spirvtools) WITH_SPIRVTOOLS=true; shift ;;
+    --no-tint) WITH_TINT=false; shift ;;
+    --no-spirvtools) WITH_SPIRVTOOLS=false; shift ;;
     --no-glslang) WITH_GLSLANG=false; shift ;;
     --no-json) WITH_JSON=false; shift ;;
     --werror) WARNINGS_AS_ERRORS=true; shift ;;

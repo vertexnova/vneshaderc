@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+
+# Pre-built tool binaries (downloaded by download_naga.py; not committed)
+macos/

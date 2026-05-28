@@ -60,8 +60,10 @@ usage() {
   echo "  --no-tests        VNE_SC_TESTS=OFF"
   echo "  --with-examples   VNE_SC_EXAMPLES=ON (default with --dev)"
   echo "  --no-examples     VNE_SC_EXAMPLES=OFF"
-  echo "  --with-tint       VNE_SC_TINT=ON (SPIR-V → WGSL; slow first configure)"
-  echo "  --with-spirvtools VNE_SC_SPIRVTOOLS=ON"
+  echo "  --no-tint         VNE_SC_TINT=OFF (default: ON; first configure is slow)"
+  echo "  --no-spirvtools   VNE_SC_SPIRVTOOLS=OFF (default: ON)"
+  echo "  --with-tint       VNE_SC_TINT=ON (redundant; enabled by default)"
+  echo "  --with-spirvtools VNE_SC_SPIRVTOOLS=ON (redundant; enabled by default)"
   echo "  --no-glslang      VNE_SC_GLSLANG=OFF"
   echo "  --no-json         VNE_SC_JSON=OFF"
   echo "  --werror          WARNINGS_AS_ERRORS=ON"
@@ -103,8 +105,8 @@ WITH_TESTS=true
 WITH_EXAMPLES=false
 TESTS_EXPLICIT=false
 EXAMPLES_EXPLICIT=false
-WITH_TINT=false
-WITH_SPIRVTOOLS=false
+WITH_TINT=true
+WITH_SPIRVTOOLS=true
 WITH_GLSLANG=true
 WITH_JSON=true
 WARNINGS_AS_ERRORS=false
@@ -123,6 +125,8 @@ while [[ $# -gt 0 ]]; do
     --no-examples) WITH_EXAMPLES=false; EXAMPLES_EXPLICIT=true; shift ;;
     --with-tint) WITH_TINT=true; shift ;;
     --with-spirvtools) WITH_SPIRVTOOLS=true; shift ;;
+    --no-tint) WITH_TINT=false; shift ;;
+    --no-spirvtools) WITH_SPIRVTOOLS=false; shift ;;
     --no-glslang) WITH_GLSLANG=false; shift ;;
     --no-json) WITH_JSON=false; shift ;;
     --werror) WARNINGS_AS_ERRORS=true; shift ;;
