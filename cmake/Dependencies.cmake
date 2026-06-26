@@ -166,6 +166,43 @@ if(VNE_SC_JSON)
     message(STATUS "[vnesc] nlohmann/json → ${_vne_sc_json_src}")
 endif()
 
+# Fix abseil-cpp PR #1710 on Apple: CMAKE deduplicates -Xarch_* compile options,
+# so x86-only flags like -msse4.1 leak into arm64 builds. Patch targets only
+# (do not edit dawn-src; that dirties FetchContent's git checkout on reconfigure).
+function(_vne_sc_fix_abseil_randen_target_copts _target)
+    get_target_property(_copts ${_target} COMPILE_OPTIONS)
+    if(NOT _copts OR _copts STREQUAL "_copts-NOTFOUND")
+        set(_copts "")
+    endif()
+    list(FILTER _copts EXCLUDE REGEX "^-Xarch_")
+    list(FILTER _copts EXCLUDE REGEX "^-m(aes|sse4\\.1|arch=)")
+    list(FILTER _copts EXCLUDE REGEX "^-Wno-unused-command-line-argument$")
+    list(APPEND _copts
+        "SHELL:-Xarch_x86_64 -maes"
+        "SHELL:-Xarch_x86_64 -msse4.1"
+        "SHELL:-Xarch_arm64 -march=armv8-a+crypto"
+        "-Wno-unused-command-line-argument")
+    set_property(TARGET ${_target} PROPERTY COMPILE_OPTIONS "${_copts}")
+endfunction()
+
+function(_vne_sc_fix_dawn_abseil_randen_copts)
+    if(NOT APPLE)
+        return()
+    endif()
+    set(_fixed 0)
+    foreach(_target IN ITEMS
+            absl_random_internal_randen_hwaes
+            absl_random_internal_randen_hwaes_impl)
+        if(TARGET ${_target})
+            _vne_sc_fix_abseil_randen_target_copts(${_target})
+            math(EXPR _fixed "${_fixed} + 1")
+        endif()
+    endforeach()
+    if(_fixed GREATER 0)
+        message(STATUS "[vnesc] Fixed ${_fixed} Dawn abseil randen HWAES target(s) for Apple ARM64")
+    endif()
+endfunction()
+
 # ══════════════════════════════════════════════════════════════════════════════
 # Dawn / Tint  (when VNE_SC_TINT=ON)  — FetchContent only, no submodule
 # ══════════════════════════════════════════════════════════════════════════════
@@ -213,6 +250,7 @@ if(VNE_SC_TINT)
         GIT_SUBMODULES       ""
         GIT_SUBMODULES_RECURSE FALSE)
     FetchContent_MakeAvailable(dawn)
+    _vne_sc_fix_dawn_abseil_randen_copts()
     set(CMAKE_BUILD_TYPE "${_vne_sc_saved_build_type}" CACHE STRING "" FORCE)
     message(STATUS "[vnesc] Dawn/Tint → FetchContent chromium/6723 (Release build)")
 endif()
