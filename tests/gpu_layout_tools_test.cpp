@@ -13,7 +13,7 @@
 namespace vne::sc {
 
 class GpuLayoutToolsTest : public ::testing::Test {
-protected:
+   protected:
     std::filesystem::path temp_dir;
 
     void SetUp() override {

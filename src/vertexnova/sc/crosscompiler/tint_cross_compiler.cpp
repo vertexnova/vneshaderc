@@ -70,7 +70,13 @@ CrossCompileResult TintCrossCompiler::crossCompile(const CrossCompileRequest& re
     tint::Program program = tint::spirv::reader::Read(req.spirv, spv_options);
     if (!program.IsValid()) {
         result.code = ResultCode::eCrossCompileFailed;
-        result.error = "TintCrossCompiler: SPIR-V parse failed";
+        std::ostringstream diag;
+        diag << "TintCrossCompiler: SPIR-V parse failed";
+        const auto& diagnostics = program.Diagnostics();
+        if (!diagnostics.IsEmpty()) {
+            diag << ":\n" << diagnostics.Str();
+        }
+        result.error = diag.str();
         VNE_LOG_ERROR << result.error;
         return result;
     }

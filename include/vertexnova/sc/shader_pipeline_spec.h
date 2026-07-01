@@ -47,14 +47,14 @@ struct ShaderPipelineSpec {
     bool validate_layout = false;
     std::string emit_binding_decls;  ///< Relative to spec dir; writes layout(...) GLSL after build.
     std::vector<std::string> emit_binding_decls_skip;
-    std::vector<std::string> emit_binding_decls_include;  ///< Whitelist block/resource names for emit.
-    std::vector<std::string> emit_binding_decls_compose;  ///< #include paths prepended to emitted file.
-    std::string emit_bindings_stage = "fragment";           ///< fragment | vertex | all
-    std::string layout_registry;  ///< Deprecated: use layout_registries.
-    std::vector<std::string> layout_registries;  ///< Relative to spec dir; merged for validate_layout.
+    std::vector<std::string> emit_binding_decls_include;       ///< Whitelist block/resource names for emit.
+    std::vector<std::string> emit_binding_decls_compose;       ///< #include paths prepended to emitted file.
+    std::string emit_bindings_stage = "fragment";              ///< fragment | vertex | all
+    std::string layout_registry;                               ///< Deprecated: use layout_registries.
+    std::vector<std::string> layout_registries;                ///< Relative to spec dir; merged for validate_layout.
     std::vector<ExpectedUniformBufferLayout> uniform_buffers;  ///< Inline pass-specific UBO sizes.
-    MetalBindingLayout metal_layout;  ///< Optional override; defaults match vnerhi.
-    std::vector<std::string> errors;  ///< Non-fatal parse warnings / errors.
+    MetalBindingLayout metal_layout;                           ///< Optional override; defaults match vnerhi.
+    std::vector<std::string> errors;                           ///< Non-fatal parse warnings / errors.
 
     /// Converts this spec into a @ref PipelineBuildDesc for @ref IShaderPipelineBuilder.
     /// @param spec_dir Directory of the spec file; used to resolve include_paths.

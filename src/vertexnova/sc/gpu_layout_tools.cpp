@@ -130,10 +130,19 @@ bool shouldSkipBlock(const std::string& block_name, const EmitBindingDeclOptions
     return false;
 }
 
+std::string blockNameToInstance(const std::string& block_name);
+
 bool shouldSkipResource(const std::string& resource_name, const EmitBindingDeclOptions& options) {
+    auto matches_skip = [&](const std::string& skip) -> bool {
+        if (skip == resource_name) {
+            return true;
+        }
+        return blockNameToInstance(skip) == resource_name;
+    };
+
     if (options.include_blocks.empty()) {
         for (const auto& skip : options.skip_blocks) {
-            if (skip == resource_name) {
+            if (matches_skip(skip)) {
                 return true;
             }
         }
