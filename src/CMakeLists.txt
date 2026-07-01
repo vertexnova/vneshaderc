@@ -95,6 +95,7 @@ add_library(vnesc STATIC
     vertexnova/sc/shader_pipeline_spec.cpp
     vertexnova/sc/shader_compiler_factory.cpp
     vertexnova/sc/shader_pipeline_builder.cpp
+    vertexnova/sc/gpu_layout_tools.cpp
     vertexnova/sc/crosscompiler/shader_cross_compiler.cpp)
 target_include_directories(vnesc PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_link_libraries(vnesc PUBLIC

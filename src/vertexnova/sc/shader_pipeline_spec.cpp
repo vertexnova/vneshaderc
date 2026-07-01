@@ -154,6 +154,73 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             }
         }
 
+        if (doc.contains("validate_layout") && doc["validate_layout"].is_boolean()) {
+            spec.validate_layout = doc["validate_layout"].get<bool>();
+        }
+
+        if (doc.contains("emit_binding_decls") && doc["emit_binding_decls"].is_string()) {
+            spec.emit_binding_decls = doc["emit_binding_decls"].get<std::string>();
+        }
+
+        if (doc.contains("emit_binding_decls_skip") && doc["emit_binding_decls_skip"].is_array()) {
+            for (const auto& name : doc["emit_binding_decls_skip"]) {
+                if (name.is_string()) {
+                    spec.emit_binding_decls_skip.push_back(name.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_binding_decls_include") && doc["emit_binding_decls_include"].is_array()) {
+            for (const auto& name : doc["emit_binding_decls_include"]) {
+                if (name.is_string()) {
+                    spec.emit_binding_decls_include.push_back(name.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_binding_decls_compose") && doc["emit_binding_decls_compose"].is_array()) {
+            for (const auto& path : doc["emit_binding_decls_compose"]) {
+                if (path.is_string()) {
+                    spec.emit_binding_decls_compose.push_back(path.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_bindings_stage") && doc["emit_bindings_stage"].is_string()) {
+            spec.emit_bindings_stage = doc["emit_bindings_stage"].get<std::string>();
+        }
+
+        if (doc.contains("layout_registries") && doc["layout_registries"].is_array()) {
+            for (const auto& path : doc["layout_registries"]) {
+                if (path.is_string()) {
+                    spec.layout_registries.push_back(path.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("layout_registry") && doc["layout_registry"].is_string()) {
+            spec.layout_registry = doc["layout_registry"].get<std::string>();
+            if (spec.layout_registries.empty()) {
+                spec.layout_registries.push_back(spec.layout_registry);
+            }
+        }
+
+        if (doc.contains("uniform_buffers") && doc["uniform_buffers"].is_array()) {
+            for (const auto& entry : doc["uniform_buffers"]) {
+                if (!entry.contains("name") || !entry["name"].is_string()) {
+                    continue;
+                }
+                ExpectedUniformBufferLayout layout;
+                layout.block_name = entry["name"].get<std::string>();
+                if (entry.contains("size") && entry["size"].is_number_unsigned()) {
+                    layout.total_size = entry["size"].get<uint32_t>();
+                } else if (entry.contains("total_size") && entry["total_size"].is_number_unsigned()) {
+                    layout.total_size = entry["total_size"].get<uint32_t>();
+                }
+                spec.uniform_buffers.push_back(std::move(layout));
+            }
+        }
+
         if (doc.contains("metal_layout") && doc["metal_layout"].is_object()) {
             const auto& ml = doc["metal_layout"];
             if (ml.contains("flatten_stride") && ml["flatten_stride"].is_number_unsigned()) {
