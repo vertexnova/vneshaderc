@@ -33,7 +33,8 @@ bool parseUniformBuffersArray(const nlohmann::json& arr,
     }
     for (const auto& entry : arr) {
         if (!entry.contains("name") || !entry["name"].is_string()) {
-            continue;
+            error = "parseUniformBuffersArray: entry missing string 'name'";
+            return false;
         }
         ExpectedUniformBufferLayout layout;
         layout.block_name = entry["name"].get<std::string>();
@@ -41,6 +42,10 @@ bool parseUniformBuffersArray(const nlohmann::json& arr,
             layout.total_size = entry["size"].get<uint32_t>();
         } else if (entry.contains("total_size") && entry["total_size"].is_number_unsigned()) {
             layout.total_size = entry["total_size"].get<uint32_t>();
+        } else {
+            error = "parseUniformBuffersArray: entry '" + layout.block_name
+                    + "' missing unsigned 'size' or 'total_size'";
+            return false;
         }
         out.push_back(std::move(layout));
     }
@@ -149,7 +154,7 @@ bool shouldSkipResource(const std::string& resource_name, const EmitBindingDeclO
         return false;
     }
     for (const auto& include : options.include_blocks) {
-        if (include == resource_name) {
+        if (include == resource_name || blockNameToInstance(include) == resource_name) {
             return false;
         }
     }
@@ -291,7 +296,7 @@ bool loadGpuLayoutRegistry(const std::filesystem::path& path, GpuLayoutRegistry&
             return false;
         }
         out.uniform_buffers.insert(out.uniform_buffers.end(), parsed.begin(), parsed.end());
-        return !parsed.empty();
+        return true;
     } catch (const std::exception& ex) {
         error = std::string("loadGpuLayoutRegistry: ") + ex.what();
         return false;
@@ -341,23 +346,24 @@ bool mergeGpuLayoutRegistries(const std::vector<std::filesystem::path>& registry
 }
 
 bool validateGpuLayouts(const ShaderArtifact& artifact, const GpuLayoutRegistry& registry, std::string& error) {
-    const StageReflection* stage_refl = pickReflectionStage(artifact, "fragment");
-    if (!stage_refl && !artifact.stages.empty()) {
-        stage_refl = &artifact.stages.back().reflection;
-    }
-    if (!stage_refl) {
+    if (artifact.stages.empty()) {
         error = "validateGpuLayouts: no reflection data available";
         return false;
     }
 
     for (const auto& expected : registry.uniform_buffers) {
         const ReflectedBindingInfo* match = nullptr;
-        for (const auto& binding : stage_refl->bindings) {
-            if (binding.type != ReflectedResourceType::eUniformBuffer) {
-                continue;
+        for (const auto& stage : artifact.stages) {
+            for (const auto& binding : stage.reflection.bindings) {
+                if (binding.type != ReflectedResourceType::eUniformBuffer) {
+                    continue;
+                }
+                if (binding.name == expected.block_name) {
+                    match = &binding;
+                    break;
+                }
             }
-            if (binding.name == expected.block_name) {
-                match = &binding;
+            if (match) {
                 break;
             }
         }

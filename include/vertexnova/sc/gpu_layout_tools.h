@@ -11,6 +11,7 @@
 
 #include "shader_artifact.h"
 
+#include <cstdint>
 #include <filesystem>
 #include <string>
 #include <vector>

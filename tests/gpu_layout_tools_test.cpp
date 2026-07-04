@@ -8,7 +8,9 @@
 #include "vertexnova/sc/gpu_layout_tools.h"
 #include "vertexnova/sc/shader_pipeline_spec.h"
 
+#include <chrono>
 #include <fstream>
+#include <string>
 
 namespace vne::sc {
 
@@ -17,8 +19,36 @@ class GpuLayoutToolsTest : public ::testing::Test {
     std::filesystem::path temp_dir;
 
     void SetUp() override {
-        temp_dir = std::filesystem::temp_directory_path() / "vnesc_gpu_layout_test";
+        const auto stamp = std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count());
+        temp_dir = std::filesystem::temp_directory_path()
+                   / ("vnesc_gpu_layout_test_" + stamp + "_"
+                      + std::to_string(reinterpret_cast<uintptr_t>(this)));
         std::filesystem::create_directories(temp_dir);
+    }
+
+    void TearDown() override {
+        std::error_code ec;
+        std::filesystem::remove_all(temp_dir, ec);
+    }
+
+    static StageArtifact makeFragmentStageWithUbo(const std::string& name, uint32_t size) {
+        StageArtifact stage;
+        stage.stage = ShaderStage::eFragment;
+        stage.reflection.stage = ShaderStage::eFragment;
+        ReflectedBindingInfo ubo;
+        ubo.name = name;
+        ubo.type = ReflectedResourceType::eUniformBuffer;
+        ubo.set = 0;
+        ubo.binding = 0;
+        ReflectedStructMember member;
+        member.name = "data";
+        member.offset = 0;
+        member.size = size;
+        member.array_count = 1;
+        ubo.struct_members.push_back(member);
+        stage.reflection.bindings.push_back(std::move(ubo));
+        return stage;
     }
 };
 
@@ -56,6 +86,32 @@ TEST_F(GpuLayoutToolsTest, MergeInlineAndFileRegistry) {
     pass_ubo.total_size = 64;
     ASSERT_TRUE(mergeGpuLayoutRegistries({path}, {pass_ubo}, merged, error));
     ASSERT_EQ(merged.uniform_buffers.size(), 2u);
+}
+
+TEST_F(GpuLayoutToolsTest, LoadRegistryRejectsMalformedEntries) {
+    const auto path = temp_dir / "bad.layout.json";
+    {
+        std::ofstream f{path};
+        f << R"({"uniform_buffers":[{"name":"NoSize"}]})";
+    }
+    GpuLayoutRegistry registry;
+    std::string error;
+    EXPECT_FALSE(loadGpuLayoutRegistry(path, registry, error));
+    EXPECT_FALSE(error.empty());
+    EXPECT_NE(error.find("size"), std::string::npos);
+}
+
+TEST_F(GpuLayoutToolsTest, LoadRegistryAcceptsEmptyUniformBuffers) {
+    const auto path = temp_dir / "empty.layout.json";
+    {
+        std::ofstream f{path};
+        f << R"({"uniform_buffers":[]})";
+    }
+    GpuLayoutRegistry registry;
+    std::string error;
+    EXPECT_TRUE(loadGpuLayoutRegistry(path, registry, error));
+    EXPECT_TRUE(error.empty());
+    EXPECT_TRUE(registry.uniform_buffers.empty());
 }
 
 TEST_F(GpuLayoutToolsTest, BuildBindingDeclsComposeOnly) {
@@ -131,6 +187,114 @@ TEST_F(GpuLayoutToolsTest, EmitPreservesReflectedArrayExtents) {
     EXPECT_EQ(glsl.find("lights[]"), std::string::npos);
 }
 
+TEST_F(GpuLayoutToolsTest, ValidateGpuLayoutsReportsMissingUbo) {
+    ShaderArtifact artifact;
+    artifact.stages.push_back(makeFragmentStageWithUbo("PresentUBO", 16));
+
+    GpuLayoutRegistry registry;
+    ExpectedUniformBufferLayout expected;
+    expected.block_name = "MissingUBO";
+    expected.total_size = 16;
+    registry.uniform_buffers.push_back(expected);
+
+    std::string error;
+    EXPECT_FALSE(validateGpuLayouts(artifact, registry, error));
+    EXPECT_NE(error.find("missing UBO"), std::string::npos);
+    EXPECT_NE(error.find("MissingUBO"), std::string::npos);
+}
+
+TEST_F(GpuLayoutToolsTest, ValidateGpuLayoutsReportsSizeMismatch) {
+    ShaderArtifact artifact;
+    artifact.stages.push_back(makeFragmentStageWithUbo("PhongMaterial", 64));
+
+    GpuLayoutRegistry registry;
+    ExpectedUniformBufferLayout expected;
+    expected.block_name = "PhongMaterial";
+    expected.total_size = 128;
+    registry.uniform_buffers.push_back(expected);
+
+    std::string error;
+    EXPECT_FALSE(validateGpuLayouts(artifact, registry, error));
+    EXPECT_NE(error.find("size mismatch"), std::string::npos);
+}
+
+TEST_F(GpuLayoutToolsTest, ValidateGpuLayoutsFindsUboInNonFragmentStage) {
+    ShaderArtifact artifact;
+    StageArtifact vertex;
+    vertex.stage = ShaderStage::eVertex;
+    vertex.reflection.stage = ShaderStage::eVertex;
+    ReflectedBindingInfo ubo;
+    ubo.name = "VertexOnlyUBO";
+    ubo.type = ReflectedResourceType::eUniformBuffer;
+    ubo.set = 0;
+    ubo.binding = 0;
+    ReflectedStructMember member;
+    member.name = "mvp";
+    member.offset = 0;
+    member.size = 64;
+    member.array_count = 1;
+    ubo.struct_members.push_back(member);
+    vertex.reflection.bindings.push_back(std::move(ubo));
+    artifact.stages.push_back(std::move(vertex));
+
+    StageArtifact fragment;
+    fragment.stage = ShaderStage::eFragment;
+    fragment.reflection.stage = ShaderStage::eFragment;
+    artifact.stages.push_back(std::move(fragment));
+
+    GpuLayoutRegistry registry;
+    ExpectedUniformBufferLayout expected;
+    expected.block_name = "VertexOnlyUBO";
+    expected.total_size = 64;
+    registry.uniform_buffers.push_back(expected);
+
+    std::string error;
+    EXPECT_TRUE(validateGpuLayouts(artifact, registry, error)) << error;
+}
+
+TEST_F(GpuLayoutToolsTest, BuildBindingDeclsRespectsSkipAndInclude) {
+    ShaderArtifact artifact;
+    StageArtifact stage;
+    stage.stage = ShaderStage::eFragment;
+    stage.reflection.stage = ShaderStage::eFragment;
+
+    ReflectedBindingInfo keep;
+    keep.name = "KeepUBO";
+    keep.type = ReflectedResourceType::eUniformBuffer;
+    keep.set = 0;
+    keep.binding = 0;
+    stage.reflection.bindings.push_back(keep);
+
+    ReflectedBindingInfo skip;
+    skip.name = "SkipUBO";
+    skip.type = ReflectedResourceType::eUniformBuffer;
+    skip.set = 0;
+    skip.binding = 1;
+    stage.reflection.bindings.push_back(skip);
+
+    ReflectedBindingInfo sampler;
+    sampler.name = "albedo_map";
+    sampler.type = ReflectedResourceType::eSampledImage;
+    sampler.set = 0;
+    sampler.binding = 2;
+    stage.reflection.bindings.push_back(sampler);
+    artifact.stages.push_back(std::move(stage));
+
+    EmitBindingDeclOptions skip_opts;
+    skip_opts.skip_blocks = {"SkipUBO"};
+    const std::string skipped = buildBindingDeclsGlsl(artifact, skip_opts);
+    EXPECT_NE(skipped.find("KeepUBO"), std::string::npos);
+    EXPECT_EQ(skipped.find("SkipUBO"), std::string::npos);
+    EXPECT_NE(skipped.find("albedo_map"), std::string::npos);
+
+    EmitBindingDeclOptions include_opts;
+    include_opts.include_blocks = {"KeepUBO", "AlbedoMap"};
+    const std::string included = buildBindingDeclsGlsl(artifact, include_opts);
+    EXPECT_NE(included.find("KeepUBO"), std::string::npos);
+    EXPECT_EQ(included.find("SkipUBO"), std::string::npos);
+    EXPECT_NE(included.find("albedo_map"), std::string::npos);
+}
+
 TEST_F(GpuLayoutToolsTest, ParsesNewManifestFields) {
     const char* json = R"({
         "name": "test",
@@ -153,6 +317,49 @@ TEST_F(GpuLayoutToolsTest, ParsesNewManifestFields) {
     ASSERT_EQ(spec->emit_binding_decls_compose.size(), 1u);
     ASSERT_EQ(spec->emit_binding_decls_include.size(), 1u);
     EXPECT_EQ(spec->emit_bindings_stage, "fragment");
+}
+
+TEST_F(GpuLayoutToolsTest, SpecRejectsInvalidUniformBufferSize) {
+    const char* json = R"({
+        "name": "test",
+        "uniform_buffers": [{"name": "Bad", "size": -1}],
+        "stages": [{"stage": "fragment", "file": "test.frag.glsl"}]
+    })";
+
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    EXPECT_TRUE(spec->uniform_buffers.empty());
+    ASSERT_FALSE(spec->errors.empty());
+    EXPECT_NE(spec->errors[0].find("invalid size"), std::string::npos);
+}
+
+TEST_F(GpuLayoutToolsTest, SpecRejectsUnknownBindingsStage) {
+    const char* json = R"({
+        "name": "test",
+        "emit_bindings_stage": "geometry",
+        "stages": [{"stage": "fragment", "file": "test.frag.glsl"}]
+    })";
+
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    EXPECT_EQ(spec->emit_bindings_stage, "fragment");
+    ASSERT_FALSE(spec->errors.empty());
+    EXPECT_NE(spec->errors[0].find("emit_bindings_stage"), std::string::npos);
+}
+
+TEST_F(GpuLayoutToolsTest, SpecWarnsOnDeprecatedLayoutRegistry) {
+    const char* json = R"({
+        "name": "test",
+        "layout_registry": "legacy.layout.json",
+        "stages": [{"stage": "fragment", "file": "test.frag.glsl"}]
+    })";
+
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    ASSERT_EQ(spec->layout_registries.size(), 1u);
+    EXPECT_EQ(spec->layout_registries[0], "legacy.layout.json");
+    ASSERT_FALSE(spec->errors.empty());
+    EXPECT_NE(spec->errors[0].find("deprecated"), std::string::npos);
 }
 
 #else

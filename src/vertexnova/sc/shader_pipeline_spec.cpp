@@ -71,6 +71,12 @@ std::optional<SourceLang> parseSourceLangString(const std::string& s) {
     return std::nullopt;
 }
 
+std::optional<std::string> parseBindingsStageString(const std::string& s) {
+    if (s == "fragment" || s == "vertex" || s == "all")
+        return s;
+    return std::nullopt;
+}
+
 }  // namespace
 
 PipelineBuildDesc ShaderPipelineSpec::toBuildDesc(const std::filesystem::path& spec_dir) const {
@@ -187,7 +193,12 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
         }
 
         if (doc.contains("emit_bindings_stage") && doc["emit_bindings_stage"].is_string()) {
-            spec.emit_bindings_stage = doc["emit_bindings_stage"].get<std::string>();
+            const auto stage = doc["emit_bindings_stage"].get<std::string>();
+            if (auto parsed = parseBindingsStageString(stage)) {
+                spec.emit_bindings_stage = *parsed;
+            } else {
+                spec.errors.push_back("unknown emit_bindings_stage: " + stage);
+            }
         }
 
         if (doc.contains("layout_registries") && doc["layout_registries"].is_array()) {
@@ -199,9 +210,25 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
         }
 
         if (doc.contains("layout_registry") && doc["layout_registry"].is_string()) {
-            spec.layout_registry = doc["layout_registry"].get<std::string>();
+            const auto legacy = doc["layout_registry"].get<std::string>();
+            spec.errors.push_back("layout_registry is deprecated; use layout_registries instead");
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
+            spec.layout_registry = legacy;
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
             if (spec.layout_registries.empty()) {
-                spec.layout_registries.push_back(spec.layout_registry);
+                spec.layout_registries.push_back(legacy);
             }
         }
 
@@ -212,9 +239,19 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
                 }
                 ExpectedUniformBufferLayout layout;
                 layout.block_name = entry["name"].get<std::string>();
-                if (entry.contains("size") && entry["size"].is_number_unsigned()) {
+                if (entry.contains("size")) {
+                    if (!entry["size"].is_number_unsigned()) {
+                        spec.errors.push_back("uniform_buffers entry '" + layout.block_name
+                                              + "': invalid size (expected unsigned integer)");
+                        continue;
+                    }
                     layout.total_size = entry["size"].get<uint32_t>();
-                } else if (entry.contains("total_size") && entry["total_size"].is_number_unsigned()) {
+                } else if (entry.contains("total_size")) {
+                    if (!entry["total_size"].is_number_unsigned()) {
+                        spec.errors.push_back("uniform_buffers entry '" + layout.block_name
+                                              + "': invalid total_size (expected unsigned integer)");
+                        continue;
+                    }
                     layout.total_size = entry["total_size"].get<uint32_t>();
                 }
                 spec.uniform_buffers.push_back(std::move(layout));
@@ -274,7 +311,22 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
 
         VNE_LOG_DEBUG << "parseShaderPipelineSpecJson: loaded '" << spec.name << "' (" << spec.stages.size()
                       << " stage(s))";
+        // Moving ShaderPipelineSpec touches deprecated layout_registry; suppress at this boundary.
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#endif
         return spec;
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+#if defined(__clang__) || defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
     } catch (const std::exception& ex) {
         VNE_LOG_ERROR << "parseShaderPipelineSpecJson: " << ex.what();

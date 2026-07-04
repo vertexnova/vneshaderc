@@ -166,25 +166,6 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                 }
             }
         }
-        for (CrossTarget target : desc.targets) {
-            if (target == CrossTarget::eWGSL) {
-                continue;
-            }
-            bool found = false;
-            for (const auto& cc : stage_artifact.cross_compiled) {
-                if (cc.target == target) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                result.code = ResultCode::eCompileFailed;
-                result.error = "ShaderPipelineBuilder: failed to cross-compile required target "
-                               + std::to_string(static_cast<int>(target));
-                VNE_LOG_ERROR << result.error;
-                return result;
-            }
-        }
 
         // ── 5. Cache store ─────────────────────────────────────────────────
         if (cache && !key.empty()) {
