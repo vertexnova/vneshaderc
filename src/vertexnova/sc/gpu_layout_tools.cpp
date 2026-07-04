@@ -202,6 +202,17 @@ std::string memberGlslType(const ReflectedStructMember& member) {
     return "float";
 }
 
+// array_count: 0 = unsized [], >1 = fixed [N], 1 = scalar (no brackets).
+void emitMemberDecl(std::ostringstream& out, const std::string& type, const ReflectedStructMember& member) {
+    out << "    " << type << " " << member.name;
+    if (member.array_count == 0) {
+        out << "[]";
+    } else if (member.array_count > 1) {
+        out << "[" << member.array_count << "]";
+    }
+    out << ";\n";
+}
+
 std::string emitSingleBinding(const ReflectedBindingInfo& binding) {
     std::ostringstream out;
     switch (binding.type) {
@@ -210,11 +221,11 @@ std::string emitSingleBinding(const ReflectedBindingInfo& binding) {
                 << binding.name << " {\n";
             if (binding.struct_members.size() == 1 && !binding.struct_members[0].type_name.empty()) {
                 const auto& member = binding.struct_members[0];
-                out << "    " << member.type_name << " " << member.name << ";\n";
+                emitMemberDecl(out, member.type_name, member);
                 out << "};\n\n";
             } else {
                 for (const auto& member : binding.struct_members) {
-                    out << "    " << memberGlslType(member) << " " << member.name << ";\n";
+                    emitMemberDecl(out, memberGlslType(member), member);
                 }
                 out << "} " << blockNameToInstance(binding.name) << ";\n\n";
             }
@@ -227,12 +238,7 @@ std::string emitSingleBinding(const ReflectedBindingInfo& binding) {
                 out << "    float data[];\n";
             } else {
                 for (const auto& member : binding.struct_members) {
-                    const std::string type = memberGlslType(member);
-                    if (member.array_count == 0 || member.array_count > 1) {
-                        out << "    " << type << " " << member.name << "[];\n";
-                    } else {
-                        out << "    " << type << " " << member.name << ";\n";
-                    }
+                    emitMemberDecl(out, memberGlslType(member), member);
                 }
             }
             out << "} " << blockNameToInstance(binding.name) << ";\n\n";

@@ -68,6 +68,69 @@ TEST_F(GpuLayoutToolsTest, BuildBindingDeclsComposeOnly) {
     EXPECT_NE(glsl.find("#include \"gen/common/bindings/clip_planes_ubo.glsl\""), std::string::npos);
 }
 
+TEST_F(GpuLayoutToolsTest, EmitPreservesReflectedArrayExtents) {
+    ShaderArtifact artifact;
+    StageArtifact stage;
+    stage.stage = ShaderStage::eFragment;
+    stage.reflection.stage = ShaderStage::eFragment;
+
+    ReflectedBindingInfo ubo;
+    ubo.name = "MaterialUBO";
+    ubo.type = ReflectedResourceType::eUniformBuffer;
+    ubo.set = 0;
+    ubo.binding = 0;
+    {
+        ReflectedStructMember scalar;
+        scalar.name = "color";
+        scalar.type_name = "vec4";
+        scalar.array_count = 1;
+        ubo.struct_members.push_back(scalar);
+
+        ReflectedStructMember fixed;
+        fixed.name = "lights";
+        fixed.type_name = "vec4";
+        fixed.array_count = 4;
+        ubo.struct_members.push_back(fixed);
+    }
+    stage.reflection.bindings.push_back(ubo);
+
+    ReflectedBindingInfo ssbo;
+    ssbo.name = "ParticleSSBO";
+    ssbo.type = ReflectedResourceType::eStorageBuffer;
+    ssbo.set = 0;
+    ssbo.binding = 1;
+    {
+        ReflectedStructMember fixed;
+        fixed.name = "positions";
+        fixed.type_name = "vec4";
+        fixed.array_count = 8;
+        ssbo.struct_members.push_back(fixed);
+
+        ReflectedStructMember unsized;
+        unsized.name = "data";
+        unsized.type_name = "float";
+        unsized.array_count = 0;
+        ssbo.struct_members.push_back(unsized);
+
+        ReflectedStructMember scalar;
+        scalar.name = "count";
+        scalar.type_name = "float";
+        scalar.array_count = 1;
+        ssbo.struct_members.push_back(scalar);
+    }
+    stage.reflection.bindings.push_back(ssbo);
+    artifact.stages.push_back(std::move(stage));
+
+    const std::string glsl = buildBindingDeclsGlsl(artifact, {});
+    EXPECT_NE(glsl.find("vec4 color;"), std::string::npos);
+    EXPECT_NE(glsl.find("vec4 lights[4];"), std::string::npos);
+    EXPECT_NE(glsl.find("vec4 positions[8];"), std::string::npos);
+    EXPECT_NE(glsl.find("float data[];"), std::string::npos);
+    EXPECT_NE(glsl.find("float count;"), std::string::npos);
+    EXPECT_EQ(glsl.find("positions[]"), std::string::npos);
+    EXPECT_EQ(glsl.find("lights[]"), std::string::npos);
+}
+
 TEST_F(GpuLayoutToolsTest, ParsesNewManifestFields) {
     const char* json = R"({
         "name": "test",
