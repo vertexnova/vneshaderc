@@ -35,6 +35,21 @@ struct ShaderStageSpec {
 };
 
 /**
+ * @brief One compile variant of a @ref ShaderPipelineSpec — the same stage
+ * files recompiled with a different set of preprocessor @c #define macros,
+ * producing a separate, sibling-named output bundle.
+ *
+ * An empty @c name denotes the base/default variant (no defines, no bundle
+ * suffix) — every manifest without an explicit "variants" array behaves as
+ * if it had exactly one variant with an empty name, preserving prior output
+ * layout and naming for every existing manifest.
+ */
+struct ShaderVariantSpec {
+    std::string name;                  ///< "" = base variant (no bundle suffix).
+    std::vector<ShaderMacro> defines;  ///< Injected into every stage's CompileRequest::macros.
+};
+
+/**
  * @brief Parsed pipeline spec (typically loaded from a `.pipeline.json` file).
  */
 struct ShaderPipelineSpec {
@@ -54,7 +69,8 @@ struct ShaderPipelineSpec {
     std::vector<std::string> layout_registries;                ///< Relative to spec dir; merged for validate_layout.
     std::vector<ExpectedUniformBufferLayout> uniform_buffers;  ///< Inline pass-specific UBO sizes.
     MetalBindingLayout metal_layout;                           ///< Optional override; defaults match vnerhi.
-    std::vector<std::string> errors;                           ///< Non-fatal parse warnings / errors.
+    std::vector<ShaderVariantSpec> variants;  ///< Optional; empty = single implicit base variant.
+    std::vector<std::string> errors;          ///< Non-fatal parse warnings / errors.
 
     /// Converts this spec into a @ref PipelineBuildDesc for @ref IShaderPipelineBuilder.
     /// @param spec_dir Directory of the spec file; used to resolve include_paths.

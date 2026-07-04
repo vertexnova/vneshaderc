@@ -254,6 +254,26 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             }
         }
 
+        if (doc.contains("variants") && doc["variants"].is_array()) {
+            for (const auto& v : doc["variants"]) {
+                if (!v.contains("name") || !v["name"].is_string()) {
+                    spec.errors.push_back("variants entry missing 'name' field");
+                    continue;
+                }
+                ShaderVariantSpec variant;
+                variant.name = v["name"].get<std::string>();
+                if (v.contains("defines") && v["defines"].is_object()) {
+                    for (auto it = v["defines"].begin(); it != v["defines"].end(); ++it) {
+                        ShaderMacro macro;
+                        macro.name = it.key();
+                        macro.value = it.value().is_string() ? it.value().get<std::string>() : it.value().dump();
+                        variant.defines.push_back(std::move(macro));
+                    }
+                }
+                spec.variants.push_back(std::move(variant));
+            }
+        }
+
         if (!doc.contains("stages") || !doc["stages"].is_array()) {
             VNE_LOG_ERROR << "parseShaderPipelineSpecJson: missing or invalid 'stages' array";
             return std::nullopt;
