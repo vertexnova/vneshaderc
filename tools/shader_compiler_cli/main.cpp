@@ -114,8 +114,7 @@ int main(int argc, char** argv) {
 
             vne::sc::GpuLayoutRegistry registry;
             std::string layout_error;
-            if (!vne::sc::mergeGpuLayoutRegistries(registry_paths, manifest->uniform_buffers, registry,
-                                                   layout_error)) {
+            if (!vne::sc::mergeGpuLayoutRegistries(registry_paths, manifest->uniform_buffers, registry, layout_error)) {
                 std::cerr << "Error: " << layout_error << "\n";
                 return 1;
             }
@@ -162,8 +161,8 @@ int main(int argc, char** argv) {
         std::cout << "Bundle written to: " << this_output << "\n";
         std::cout << "  Stages: " << result.artifact.stages.size() << "\n";
         for (const auto& stage : result.artifact.stages) {
-            std::cout << "  - stage " << static_cast<int>(stage.stage) << " | spirv=" << stage.spirv.size()
-                      << " words" << " | cross=" << stage.cross_compiled.size() << " target(s)\n";
+            std::cout << "  - stage " << static_cast<int>(stage.stage) << " | spirv=" << stage.spirv.size() << " words"
+                      << " | cross=" << stage.cross_compiled.size() << " target(s)\n";
         }
     }
     return 0;

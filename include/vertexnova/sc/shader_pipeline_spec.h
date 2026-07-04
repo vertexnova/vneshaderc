@@ -69,8 +69,8 @@ struct ShaderPipelineSpec {
     std::vector<std::string> layout_registries;                ///< Relative to spec dir; merged for validate_layout.
     std::vector<ExpectedUniformBufferLayout> uniform_buffers;  ///< Inline pass-specific UBO sizes.
     MetalBindingLayout metal_layout;                           ///< Optional override; defaults match vnerhi.
-    std::vector<ShaderVariantSpec> variants;  ///< Optional; empty = single implicit base variant.
-    std::vector<std::string> errors;          ///< Non-fatal parse warnings / errors.
+    std::vector<ShaderVariantSpec> variants;                   ///< Optional; empty = single implicit base variant.
+    std::vector<std::string> errors;                           ///< Non-fatal parse warnings / errors.
 
     /// Converts this spec into a @ref PipelineBuildDesc for @ref IShaderPipelineBuilder.
     /// @param spec_dir Directory of the spec file; used to resolve include_paths.
