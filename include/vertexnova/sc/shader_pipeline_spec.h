@@ -44,13 +44,13 @@ struct ShaderPipelineSpec {
     std::vector<CrossTarget> targets;
     std::vector<std::string> include_paths;  ///< Resolved relative to the spec file's directory.
     bool validate = true;
-    bool validate_layout = false;  ///< Opt-in: compare reflected UBO sizes against layout registries.
+    bool validate_layout = false;    ///< Opt-in: compare reflected UBO sizes against layout registries.
     std::string emit_binding_decls;  ///< Relative to spec dir; writes layout(...) GLSL after build.
-    std::vector<std::string> emit_binding_decls_skip;  ///< Blacklist counterpart to emit_binding_decls_include.
+    std::vector<std::string> emit_binding_decls_skip;          ///< Blacklist counterpart to emit_binding_decls_include.
     std::vector<std::string> emit_binding_decls_include;       ///< Whitelist block/resource names for emit.
     std::vector<std::string> emit_binding_decls_compose;       ///< #include paths prepended to emitted file.
     std::string emit_bindings_stage = "fragment";              ///< fragment | vertex | all
-    [[deprecated("use layout_registries")]] std::string layout_registry;  ///< Deprecated: use layout_registries.
+    std::string layout_registry;                               ///< Deprecated: use layout_registries.
     std::vector<std::string> layout_registries;                ///< Relative to spec dir; merged for validate_layout.
     std::vector<ExpectedUniformBufferLayout> uniform_buffers;  ///< Inline pass-specific UBO sizes.
     MetalBindingLayout metal_layout;                           ///< Optional override; defaults match vnerhi.

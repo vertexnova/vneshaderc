@@ -212,21 +212,7 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
         if (doc.contains("layout_registry") && doc["layout_registry"].is_string()) {
             const auto legacy = doc["layout_registry"].get<std::string>();
             spec.errors.push_back("layout_registry is deprecated; use layout_registries instead");
-#if defined(__clang__) || defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
             spec.layout_registry = legacy;
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-#if defined(__clang__) || defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
             if (spec.layout_registries.empty()) {
                 spec.layout_registries.push_back(legacy);
             }
@@ -311,22 +297,7 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
 
         VNE_LOG_DEBUG << "parseShaderPipelineSpecJson: loaded '" << spec.name << "' (" << spec.stages.size()
                       << " stage(s))";
-        // Moving ShaderPipelineSpec touches deprecated layout_registry; suppress at this boundary.
-#if defined(__clang__) || defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-#if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable : 4996)
-#endif
         return spec;
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-#if defined(__clang__) || defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
 
     } catch (const std::exception& ex) {
         VNE_LOG_ERROR << "parseShaderPipelineSpecJson: " << ex.what();

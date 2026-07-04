@@ -19,11 +19,9 @@ class GpuLayoutToolsTest : public ::testing::Test {
     std::filesystem::path temp_dir;
 
     void SetUp() override {
-        const auto stamp = std::to_string(
-            std::chrono::steady_clock::now().time_since_epoch().count());
+        const auto stamp = std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
         temp_dir = std::filesystem::temp_directory_path()
-                   / ("vnesc_gpu_layout_test_" + stamp + "_"
-                      + std::to_string(reinterpret_cast<uintptr_t>(this)));
+                   / ("vnesc_gpu_layout_test_" + stamp + "_" + std::to_string(reinterpret_cast<uintptr_t>(this)));
         std::filesystem::create_directories(temp_dir);
     }
 

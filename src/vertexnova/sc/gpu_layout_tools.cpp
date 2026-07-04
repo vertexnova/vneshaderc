@@ -43,8 +43,8 @@ bool parseUniformBuffersArray(const nlohmann::json& arr,
         } else if (entry.contains("total_size") && entry["total_size"].is_number_unsigned()) {
             layout.total_size = entry["total_size"].get<uint32_t>();
         } else {
-            error = "parseUniformBuffersArray: entry '" + layout.block_name
-                    + "' missing unsigned 'size' or 'total_size'";
+            error =
+                "parseUniformBuffersArray: entry '" + layout.block_name + "' missing unsigned 'size' or 'total_size'";
             return false;
         }
         out.push_back(std::move(layout));
