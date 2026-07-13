@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 
 #ifdef VNE_SC_JSON_ENABLED
 #include <nlohmann/json.hpp>
@@ -255,6 +256,7 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
         }
 
         if (doc.contains("variants") && doc["variants"].is_array()) {
+            std::unordered_set<std::string> seen_variant_names;
             for (const auto& v : doc["variants"]) {
                 if (!v.contains("name") || !v["name"].is_string()) {
                     spec.errors.push_back("variants entry missing 'name' field");
@@ -262,6 +264,10 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
                 }
                 ShaderVariantSpec variant;
                 variant.name = v["name"].get<std::string>();
+                if (!seen_variant_names.insert(variant.name).second) {
+                    spec.errors.push_back("duplicate variant name: '" + variant.name + "'");
+                    continue;
+                }
                 if (v.contains("defines") && v["defines"].is_object()) {
                     for (auto it = v["defines"].begin(); it != v["defines"].end(); ++it) {
                         ShaderMacro macro;
