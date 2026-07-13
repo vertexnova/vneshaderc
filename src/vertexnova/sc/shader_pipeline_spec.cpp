@@ -212,6 +212,7 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
         if (doc.contains("layout_registry") && doc["layout_registry"].is_string()) {
             const auto legacy = doc["layout_registry"].get<std::string>();
             spec.errors.push_back("layout_registry is deprecated; use layout_registries instead");
+            spec.layout_registry = legacy;
             if (spec.layout_registries.empty()) {
                 spec.layout_registries.push_back(legacy);
             }
