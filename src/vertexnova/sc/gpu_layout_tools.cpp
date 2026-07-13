@@ -5,8 +5,6 @@
 
 #include "vertexnova/sc/gpu_layout_tools.h"
 
-#include "vertexnova/logging/logging.h"
-
 #include <cctype>
 #include <algorithm>
 #include <fstream>
@@ -16,8 +14,6 @@
 #ifdef VNE_SC_JSON_ENABLED
 #include <nlohmann/json.hpp>
 #endif
-
-CREATE_VNE_LOGGER_CATEGORY("vne.sc.gpu_layout")
 
 namespace vne::sc {
 
