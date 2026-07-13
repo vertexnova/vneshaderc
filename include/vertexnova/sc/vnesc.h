@@ -29,3 +29,4 @@
 #include "shader_reflection_binary.h"
 #include "shader_bundle.h"
 #include "shader_pipeline_spec.h"
+#include "gpu_layout_tools.h"

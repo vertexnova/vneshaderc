@@ -31,6 +31,7 @@ set(VNESC_TEST_SOURCES
     shader_artifact_cache_test.cpp
     shader_compiler_factory_test.cpp
     shader_pipeline_spec_test.cpp
+    gpu_layout_tools_test.cpp
 )
 
 if(VNE_SC_GLSLANG)

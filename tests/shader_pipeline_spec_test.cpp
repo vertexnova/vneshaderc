@@ -100,4 +100,78 @@ TEST_F(ShaderPipelineSpecTest, RejectsMissingStages) {
 #endif
 }
 
+TEST_F(ShaderPipelineSpecTest, ParsesVariants) {
+    const char* json = R"({
+        "name": "oit_material",
+        "source_lang": "GLSL",
+        "stages": [
+            { "stage": "fragment", "file": "oit_material.frag" }
+        ],
+        "variants": [
+            { "name": "", "defines": {} },
+            { "name": "oit_accum", "defines": { "OIT_MODE_WBOIT": "1" } }
+        ]
+    })";
+#ifdef VNE_SC_JSON_ENABLED
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    ASSERT_EQ(spec->variants.size(), 2u);
+    EXPECT_EQ(spec->variants[0].name, "");
+    EXPECT_TRUE(spec->variants[0].defines.empty());
+    EXPECT_EQ(spec->variants[1].name, "oit_accum");
+    ASSERT_EQ(spec->variants[1].defines.size(), 1u);
+    EXPECT_EQ(spec->variants[1].defines[0].name, "OIT_MODE_WBOIT");
+    EXPECT_EQ(spec->variants[1].defines[0].value, "1");
+#else
+    (void)json;
+    GTEST_SKIP() << "JSON support not enabled";
+#endif
+}
+
+TEST_F(ShaderPipelineSpecTest, RejectsDuplicateVariantNames) {
+    const char* json = R"({
+        "name": "dup_variants",
+        "source_lang": "GLSL",
+        "stages": [
+            { "stage": "fragment", "file": "test.frag" }
+        ],
+        "variants": [
+            { "name": "" },
+            { "name": "oit_accum" },
+            { "name": "" },
+            { "name": "oit_accum" }
+        ]
+    })";
+#ifdef VNE_SC_JSON_ENABLED
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    ASSERT_EQ(spec->variants.size(), 2u);
+    EXPECT_EQ(spec->variants[0].name, "");
+    EXPECT_EQ(spec->variants[1].name, "oit_accum");
+    ASSERT_GE(spec->errors.size(), 2u);
+    EXPECT_NE(spec->errors[0].find("duplicate variant name"), std::string::npos);
+#else
+    (void)json;
+    GTEST_SKIP() << "JSON support not enabled";
+#endif
+}
+
+TEST_F(ShaderPipelineSpecTest, MissingVariantsProducesEmptyList) {
+    const char* json = R"({
+        "name": "no_variants",
+        "source_lang": "GLSL",
+        "stages": [
+            { "stage": "vertex", "file": "test.vert" }
+        ]
+    })";
+#ifdef VNE_SC_JSON_ENABLED
+    auto spec = parseShaderPipelineSpecJson(json);
+    ASSERT_TRUE(spec.has_value());
+    EXPECT_TRUE(spec->variants.empty());
+#else
+    (void)json;
+    GTEST_SKIP() << "JSON support not enabled";
+#endif
+}
+
 }  // namespace vne::sc

@@ -154,19 +154,17 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                     cc.entry_point = std::move(ccres.entry_point);
                     stage_artifact.cross_compiled.push_back(std::move(cc));
                 } else {
-                    result.code = ccres.code;
-                    result.error = "ShaderPipelineBuilder: cross-compile to target "
-                                   + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
-                    VNE_LOG_ERROR << result.error;
-                    return result;
+                    if (target == CrossTarget::eWGSL) {
+                        VNE_LOG_WARN << "ShaderPipelineBuilder: WGSL cross-compile failed (non-fatal): " << ccres.error;
+                    } else {
+                        result.code = ccres.code;
+                        result.error = "ShaderPipelineBuilder: cross-compile to target "
+                                       + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
+                        VNE_LOG_ERROR << result.error;
+                        return result;
+                    }
                 }
             }
-        }
-        if (stage_artifact.cross_compiled.size() != desc.targets.size()) {
-            result.code = ResultCode::eCompileFailed;
-            result.error = "ShaderPipelineBuilder: failed to cross-compile one or more requested targets";
-            VNE_LOG_ERROR << result.error;
-            return result;
         }
 
         // ── 5. Cache store ─────────────────────────────────────────────────

@@ -311,11 +311,24 @@ def compile_one(
     if result.returncode != 0:
         return False, str(manifest), result.stderr.strip()
 
-    if naga and output.is_dir() and _bundle_missing_wgsl(output):
-        if verbose:
-            print(f"  WGSL missing — running naga fallback for: {output.name}")
-        if not generate_wgsl_for_bundle(output, naga, verbose=verbose, dry_run=False):
-            return False, str(manifest), f"naga WGSL generation failed for {output}"
+    # A manifest with a "variants" array produces one sibling bundle per variant
+    # from this single invocation; parse every "Bundle written to: ..." line the
+    # compiler reports instead of assuming exactly one output directory.
+    bundle_dirs = [
+        Path(line.split("Bundle written to: ", 1)[1].strip().strip('"'))
+        for line in result.stdout.splitlines()
+        if line.startswith("Bundle written to: ")
+    ]
+    if not bundle_dirs:
+        bundle_dirs = [output]  # defensive fallback if the reported format ever changes
+
+    if naga:
+        for bundle_dir in bundle_dirs:
+            if bundle_dir.is_dir() and _bundle_missing_wgsl(bundle_dir):
+                if verbose:
+                    print(f"  WGSL missing — running naga fallback for: {bundle_dir.name}")
+                if not generate_wgsl_for_bundle(bundle_dir, naga, verbose=verbose, dry_run=False):
+                    return False, str(manifest), f"naga WGSL generation failed for {bundle_dir}"
 
     return True, str(manifest), ""
 

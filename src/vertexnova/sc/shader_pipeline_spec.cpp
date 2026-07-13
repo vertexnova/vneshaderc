@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <unordered_set>
 
 #ifdef VNE_SC_JSON_ENABLED
 #include <nlohmann/json.hpp>
@@ -68,6 +69,12 @@ std::optional<SourceLang> parseSourceLangString(const std::string& s) {
         return SourceLang::eWGSL;
     if (s == "Slang" || s == "slang")
         return SourceLang::eSlang;
+    return std::nullopt;
+}
+
+std::optional<std::string> parseBindingsStageString(const std::string& s) {
+    if (s == "fragment" || s == "vertex" || s == "all")
+        return s;
     return std::nullopt;
 }
 
@@ -154,6 +161,90 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             }
         }
 
+        if (doc.contains("validate_layout") && doc["validate_layout"].is_boolean()) {
+            spec.validate_layout = doc["validate_layout"].get<bool>();
+        }
+
+        if (doc.contains("emit_binding_decls") && doc["emit_binding_decls"].is_string()) {
+            spec.emit_binding_decls = doc["emit_binding_decls"].get<std::string>();
+        }
+
+        if (doc.contains("emit_binding_decls_skip") && doc["emit_binding_decls_skip"].is_array()) {
+            for (const auto& name : doc["emit_binding_decls_skip"]) {
+                if (name.is_string()) {
+                    spec.emit_binding_decls_skip.push_back(name.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_binding_decls_include") && doc["emit_binding_decls_include"].is_array()) {
+            for (const auto& name : doc["emit_binding_decls_include"]) {
+                if (name.is_string()) {
+                    spec.emit_binding_decls_include.push_back(name.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_binding_decls_compose") && doc["emit_binding_decls_compose"].is_array()) {
+            for (const auto& path : doc["emit_binding_decls_compose"]) {
+                if (path.is_string()) {
+                    spec.emit_binding_decls_compose.push_back(path.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("emit_bindings_stage") && doc["emit_bindings_stage"].is_string()) {
+            const auto stage = doc["emit_bindings_stage"].get<std::string>();
+            if (auto parsed = parseBindingsStageString(stage)) {
+                spec.emit_bindings_stage = *parsed;
+            } else {
+                spec.errors.push_back("unknown emit_bindings_stage: " + stage);
+            }
+        }
+
+        if (doc.contains("layout_registries") && doc["layout_registries"].is_array()) {
+            for (const auto& path : doc["layout_registries"]) {
+                if (path.is_string()) {
+                    spec.layout_registries.push_back(path.get<std::string>());
+                }
+            }
+        }
+
+        if (doc.contains("layout_registry") && doc["layout_registry"].is_string()) {
+            const auto legacy = doc["layout_registry"].get<std::string>();
+            spec.errors.push_back("layout_registry is deprecated; use layout_registries instead");
+            spec.layout_registry = legacy;
+            if (spec.layout_registries.empty()) {
+                spec.layout_registries.push_back(legacy);
+            }
+        }
+
+        if (doc.contains("uniform_buffers") && doc["uniform_buffers"].is_array()) {
+            for (const auto& entry : doc["uniform_buffers"]) {
+                if (!entry.contains("name") || !entry["name"].is_string()) {
+                    continue;
+                }
+                ExpectedUniformBufferLayout layout;
+                layout.block_name = entry["name"].get<std::string>();
+                if (entry.contains("size")) {
+                    if (!entry["size"].is_number_unsigned()) {
+                        spec.errors.push_back("uniform_buffers entry '" + layout.block_name
+                                              + "': invalid size (expected unsigned integer)");
+                        continue;
+                    }
+                    layout.total_size = entry["size"].get<uint32_t>();
+                } else if (entry.contains("total_size")) {
+                    if (!entry["total_size"].is_number_unsigned()) {
+                        spec.errors.push_back("uniform_buffers entry '" + layout.block_name
+                                              + "': invalid total_size (expected unsigned integer)");
+                        continue;
+                    }
+                    layout.total_size = entry["total_size"].get<uint32_t>();
+                }
+                spec.uniform_buffers.push_back(std::move(layout));
+            }
+        }
+
         if (doc.contains("metal_layout") && doc["metal_layout"].is_object()) {
             const auto& ml = doc["metal_layout"];
             if (ml.contains("flatten_stride") && ml["flatten_stride"].is_number_unsigned()) {
@@ -161,6 +252,31 @@ std::optional<ShaderPipelineSpec> parseShaderPipelineSpecJson(const std::string&
             }
             if (ml.contains("buffer_base") && ml["buffer_base"].is_number_unsigned()) {
                 spec.metal_layout.buffer_base = ml["buffer_base"].get<uint32_t>();
+            }
+        }
+
+        if (doc.contains("variants") && doc["variants"].is_array()) {
+            std::unordered_set<std::string> seen_variant_names;
+            for (const auto& v : doc["variants"]) {
+                if (!v.contains("name") || !v["name"].is_string()) {
+                    spec.errors.push_back("variants entry missing 'name' field");
+                    continue;
+                }
+                ShaderVariantSpec variant;
+                variant.name = v["name"].get<std::string>();
+                if (!seen_variant_names.insert(variant.name).second) {
+                    spec.errors.push_back("duplicate variant name: '" + variant.name + "'");
+                    continue;
+                }
+                if (v.contains("defines") && v["defines"].is_object()) {
+                    for (auto it = v["defines"].begin(); it != v["defines"].end(); ++it) {
+                        ShaderMacro macro;
+                        macro.name = it.key();
+                        macro.value = it.value().is_string() ? it.value().get<std::string>() : it.value().dump();
+                        variant.defines.push_back(std::move(macro));
+                    }
+                }
+                spec.variants.push_back(std::move(variant));
             }
         }
 
