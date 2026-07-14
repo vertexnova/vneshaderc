@@ -31,7 +31,8 @@ class SpirvCrossReflector final : public IShaderReflector {  // NOLINT(readabili
     ReflectResult reflect(const std::vector<uint32_t>& spirv,
                           ShaderStage stage,
                           const std::vector<CrossTarget>& targets = {},
-                          MetalBindingLayout metal_layout = {}) override;
+                          MetalBindingLayout metal_layout = {},
+                          const MetalBindingAllocator* metal_program_map = nullptr) override;
 };
 
 }  // namespace vne::sc

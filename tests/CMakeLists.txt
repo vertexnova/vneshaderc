@@ -40,6 +40,7 @@ if(VNE_SC_GLSLANG)
         spirvcross_reflector_test.cpp
         shader_cross_compiler_test.cpp
         shader_pipeline_builder_test.cpp
+        metal_binding_allocator_test.cpp
         shader_bundle_test.cpp
         shader_pipeline_spec_includes_test.cpp)
 endif()

@@ -47,12 +47,14 @@ class ShaderArtifactCache {
      * @brief Derives a deterministic cache key from a compile request.
      *
      * The key encodes source text, file path, entry point, stage, language,
-     * optimisation level, preprocessor macros, cross-compilation targets, and
-     * @ref MetalBindingLayout when @c CrossTarget::eMSL is among @p targets.
+     * optimisation level, preprocessor macros, cross-compilation targets,
+     * @ref MetalBindingLayout, and an optional program-wide Metal signature
+     * fingerprint when @c CrossTarget::eMSL is among @p targets.
      */
     static std::string makeKey(const CompileRequest& req,
                                const std::vector<CrossTarget>& targets,
-                               const MetalBindingLayout& metal_layout = {});
+                               const MetalBindingLayout& metal_layout = {},
+                               std::uint64_t metal_program_fingerprint = 0);
 
     /**
      * @brief Looks up a cached artifact by key.

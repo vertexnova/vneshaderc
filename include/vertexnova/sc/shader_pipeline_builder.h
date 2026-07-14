@@ -45,6 +45,13 @@ struct PipelineBuildDesc {
     bool use_cache = true;               ///< Enable the file-based artifact cache.
     std::string cache_dir;               ///< Cache root directory; empty disables caching.
     MetalBindingLayout metal_layout;     ///< Propagated to cross-compiler and reflector.
+    /**
+     * @brief Temporary rollback switch for Metal program-wide dense slot maps.
+     *
+     * When true (default), MSL builds compute one shared @ref MetalBindingAllocator from the
+     * union of all stages. Set false to restore stage-local dense allocation (emergency only).
+     */
+    bool metal_dense_program_map = true;
 };
 
 /**

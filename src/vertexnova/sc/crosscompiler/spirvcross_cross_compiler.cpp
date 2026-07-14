@@ -11,12 +11,15 @@
 
 #include "spirvcross_cross_compiler.h"
 
+#include "vertexnova/sc/metal_binding_allocator.h"
+
 #include "spirv_cross.hpp"
 #include "spirv_glsl.hpp"
 #include "spirv_msl.hpp"
 
 #include "vertexnova/logging/logging.h"
 
+#include <memory>
 #include <regex>
 #include <sstream>
 #include <unordered_map>
@@ -24,16 +27,6 @@
 CREATE_VNE_LOGGER_CATEGORY("vne.sc.crosscompiler")
 
 namespace {
-
-inline uint32_t metalBufferSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return layout.buffer_base + (set * layout.flatten_stride + binding);
-}
-inline uint32_t metalTextureSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
-inline uint32_t metalSamplerSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
 
 // ── Sampler index post-processing ─────────────────────────────────────────────
 // SPIRV-Cross doesn't always correctly remap sampler indices when splitting combined
@@ -219,92 +212,21 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
         }
 
         // ── Resource binding remapping ─────────────────────────────────────────
-        // Note: do NOT call build_combined_image_samplers() for MSL. CompilerMSL
-        // handles OpSampledImage (from separate texture2D + sampler) natively.
-        // Calling it creates synthetic combined variables that conflict with the
-        // original separate resources, producing duplicate [[texture(N)]] slots.
-        auto resources = compiler.get_shader_resources();
-
-        // Combined image samplers (sampler2D uniforms in Vulkan GLSL → sampled_images in SPIR-V)
-        for (const auto& r : resources.sampled_images) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
-            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
+        // Dense (set,binding)→Metal index map. Prefer the program-wide signature from
+        // ShaderPipelineBuilder so all stages agree; otherwise allocate stage-locally.
+        // Note: do NOT call build_combined_image_samplers() for MSL.
+        std::unique_ptr<vne::sc::MetalBindingAllocator> stage_local_map;
+        const vne::sc::MetalBindingAllocator* metal_map = req.metal_program_map;
+        if (metal_map == nullptr) {
+            stage_local_map = std::make_unique<vne::sc::MetalBindingAllocator>(compiler, req.metal_layout);
+            metal_map = stage_local_map.get();
         }
-
-        // Uniform buffers
-        for (const auto& r : resources.uniform_buffers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
+        if (const std::string overflow = metal_map->overflowError(); !overflow.empty()) {
+            result.code = ResultCode::eCrossCompileFailed;
+            result.error = "SpirvCrossCrossCompiler: " + overflow;
+            return result;
         }
-
-        // Storage buffers
-        for (const auto& r : resources.storage_buffers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
-
-        // Separate images
-        for (const auto& r : resources.separate_images) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
-
-        // Separate samplers
-        for (const auto& r : resources.separate_samplers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
+        vne::sc::applyMslResourceBindings(compiler, *metal_map, exec_model);
 
         // Disable unused fragment inputs to suppress spurious [[stage_in]] parameters
         if (exec_model == spv::ExecutionModelFragment) {

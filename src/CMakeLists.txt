@@ -53,6 +53,7 @@ if(NOT TARGET spirv-cross-core)
         "Set VNE_SC_SPIRV_CROSS_DIR or allow FetchContent in cmake/Dependencies.cmake.")
 endif()
 add_library(vnesc_spirvcross STATIC
+    vertexnova/sc/crosscompiler/metal_binding_allocator.cpp
     vertexnova/sc/crosscompiler/spirvcross_cross_compiler.cpp
     vertexnova/sc/reflector/spirvcross_reflector.cpp)
 target_include_directories(vnesc_spirvcross PRIVATE ${PROJECT_SOURCE_DIR}/src)

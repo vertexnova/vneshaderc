@@ -163,7 +163,14 @@ struct CrossCompileRequest {
     uint32_t msl_version = kDefaultMslVersion;  ///< MSL version (e.g. 30000 → Metal 3.0).
     uint32_t glsl_version = kDefaultGlslVersion;
     bool fix_msl_fragment_signature = true;  ///< Align fragment stage_in with vertex output.
-    MetalBindingLayout metal_layout;         ///< MSL binding offsets (defaults match vnerhi).
+    MetalBindingLayout metal_layout;         ///< Legacy flatten params (buffer_base still used by dense alloc).
+    /**
+     * @brief Optional program-wide dense Metal map (non-owning).
+     *
+     * When non-null and @c target is MSL, bindings are taken from this map instead of the
+     * flatten formula. Owned by @ref ShaderPipelineBuilder for the duration of @c build().
+     */
+    const class MetalBindingAllocator* metal_program_map = nullptr;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -11,6 +11,8 @@
 
 #include "spirvcross_reflector.h"
 
+#include "vertexnova/sc/metal_binding_allocator.h"
+
 #include "spirv_cross.hpp"
 #include "spirv_msl.hpp"
 
@@ -26,16 +28,6 @@
 CREATE_VNE_LOGGER_CATEGORY("vne.sc.reflector")
 
 namespace {
-
-inline uint32_t metalBuf(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return layout.buffer_base + (set * layout.flatten_stride + binding);
-}
-inline uint32_t metalTex(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
-inline uint32_t metalSmp(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
 
 // ── Reflect struct members from a SPIRV-Cross block type ─────────────────────
 std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cross::Compiler& compiler,
@@ -70,7 +62,7 @@ template<vne::sc::ReflectedResourceType Type>
 void appendBinding(const spirv_cross::Compiler& compiler,
                    const spirv_cross::CompilerMSL* msl,  // nullptr → MSL not a target
                    bool has_webgpu,
-                   const vne::sc::MetalBindingLayout& layout,
+                   const vne::sc::MetalBindingAllocator* metal_map,
                    const spirv_cross::Resource& res,
                    std::vector<vne::sc::ReflectedBindingInfo>& out) {
     using namespace vne::sc;
@@ -81,7 +73,6 @@ void appendBinding(const spirv_cross::Compiler& compiler,
     const spirv_cross::SPIRType& ty = compiler.get_type(res.type_id);
     const uint32_t array_size = ty.array.empty() ? 1u : (ty.array[0] == 0u ? 0u : ty.array[0]);
 
-    // Classify cubemap images separately
     ReflectedResourceType actual_type = Type;
     if constexpr (Type == ReflectedResourceType::eSampledImage) {
         if (ty.image.dim == spv::DimCube) {
@@ -89,11 +80,10 @@ void appendBinding(const spirv_cross::Compiler& compiler,
         }
     }
 
-    // ── Backend slot assignment ───────────────────────────────────────────────
     ResourceBackendSlots slots;
 
     if (msl) {
-        MetalResourceSlot metal;
+        MetalResourceSlot metal{};
         bool from_spirvcross = false;
         try {
             const uint32_t primary = msl->get_automatic_msl_resource_binding(res.id);
@@ -117,14 +107,18 @@ void appendBinding(const spirv_cross::Compiler& compiler,
             }
         } catch (...) {
         }
-        if (!from_spirvcross) {
-            // Deterministic fallback formula when SPIRV-Cross auto-binding unavailable
+        if (!from_spirvcross && metal_map != nullptr) {
             if constexpr (Type == ReflectedResourceType::eUniformBuffer
                           || Type == ReflectedResourceType::eStorageBuffer) {
-                metal.buffer = metalBuf(set, binding, layout);
+                metal.buffer = metal_map->buffer(set, binding);
+            } else if constexpr (Type == ReflectedResourceType::eSampler) {
+                metal.sampler = metal_map->sampler(set, binding);
+            } else if constexpr (Type == ReflectedResourceType::eCombinedImageSampler) {
+                metal.texture = metal_map->texture(set, binding);
+                metal.sampler = metal_map->sampler(set, binding);
             } else {
-                metal.texture = metalTex(set, binding, layout);
-                metal.sampler = metalSmp(set, binding, layout);
+                metal.texture = metal_map->texture(set, binding);
+                metal.sampler = metal_map->sampler(set, binding);
             }
         }
         slots.metal = metal;
@@ -134,17 +128,15 @@ void appendBinding(const spirv_cross::Compiler& compiler,
         slots.webgpu = WebGpuResourceSlot{set, binding};
     }
 
-    // ── Assemble binding info ─────────────────────────────────────────────────
     ReflectedBindingInfo info;
     info.name = res.name;
     info.type = actual_type;
     info.set = set;
     info.binding = binding;
     info.array_size = array_size;
-    info.stages = ShaderStageFlags::eNone;  // caller sets stage flags
+    info.stages = ShaderStageFlags::eNone;
     info.slots = slots;
 
-    // Struct members for buffer types
     if constexpr (Type == ReflectedResourceType::eUniformBuffer || Type == ReflectedResourceType::eStorageBuffer) {
         try {
             const spirv_cross::SPIRType& block = compiler.get_type(res.base_type_id);
@@ -176,6 +168,24 @@ vne::sc::ShaderStageFlags stageToFlag(vne::sc::ShaderStage s) noexcept {
     return F::eNone;
 }
 
+spv::ExecutionModel stageToExecModel(vne::sc::ShaderStage stage) noexcept {
+    switch (stage) {
+        case vne::sc::ShaderStage::eVertex:
+            return spv::ExecutionModelVertex;
+        case vne::sc::ShaderStage::eFragment:
+            return spv::ExecutionModelFragment;
+        case vne::sc::ShaderStage::eCompute:
+            return spv::ExecutionModelGLCompute;
+        case vne::sc::ShaderStage::eGeometry:
+            return spv::ExecutionModelGeometry;
+        case vne::sc::ShaderStage::eTessellationControl:
+            return spv::ExecutionModelTessellationControl;
+        case vne::sc::ShaderStage::eTessellationEvaluation:
+            return spv::ExecutionModelTessellationEvaluation;
+    }
+    return spv::ExecutionModelVertex;
+}
+
 }  // namespace
 
 namespace vne::sc {
@@ -183,7 +193,8 @@ namespace vne::sc {
 ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
                                            ShaderStage stage,
                                            const std::vector<CrossTarget>& targets,
-                                           MetalBindingLayout metal_layout) {
+                                           MetalBindingLayout metal_layout,
+                                           const MetalBindingAllocator* metal_program_map) {
     ReflectResult result;
 
     if (spirv.empty()) {
@@ -197,20 +208,32 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
     const bool has_webgpu = std::find(targets.begin(), targets.end(), CrossTarget::eWGSL) != targets.end();
 
     try {
-        // Base compiler for Vulkan reflection
         spirv_cross::Compiler compiler(spirv.data(), spirv.size());
 
-        // MSL compiler — only instantiated when eMSL is a requested target
+        std::unique_ptr<MetalBindingAllocator> stage_local_map;
+        const MetalBindingAllocator* metal_map = metal_program_map;
+        if (has_msl && metal_map == nullptr) {
+            stage_local_map = std::make_unique<MetalBindingAllocator>(compiler, metal_layout);
+            metal_map = stage_local_map.get();
+        }
+
         std::unique_ptr<spirv_cross::CompilerMSL> msl_compiler;
-        if (has_msl) {
+        if (has_msl && metal_map != nullptr) {
+            if (const std::string overflow = metal_map->overflowError(); !overflow.empty()) {
+                result.code = ResultCode::eReflectionFailed;
+                result.error = "SpirvCrossReflector: " + overflow;
+                VNE_LOG_ERROR << result.error;
+                return result;
+            }
             msl_compiler = std::make_unique<spirv_cross::CompilerMSL>(spirv.data(), spirv.size());
             spirv_cross::CompilerMSL::Options msl_opts;
             msl_opts.platform = spirv_cross::CompilerMSL::Options::macOS;
             msl_compiler->set_msl_options(msl_opts);
+            applyMslResourceBindings(*msl_compiler, *metal_map, stageToExecModel(stage));
             try {
                 msl_compiler->compile();
             } catch (...) {
-                VNE_LOG_WARN << "SpirvCrossReflector: MSL compile pass failed; using fallback slot formula";
+                VNE_LOG_WARN << "SpirvCrossReflector: MSL compile pass failed; using allocator slot map";
             }
         }
 
@@ -228,7 +251,7 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
         appendBinding<ReflectedResourceType::Type>(compiler,           \
                                                    msl_compiler.get(), \
                                                    has_webgpu,         \
-                                                   metal_layout,       \
+                                                   metal_map,          \
                                                    res,                \
                                                    bindings);          \
     }
@@ -242,12 +265,10 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
 
 #undef VNE_REFLECT_LIST
 
-        // Tag each binding with this stage
         for (auto& b : bindings) {
             b.stages = stage_flag;
         }
 
-        // Push-constant block size
         for (const auto& pc : resources.push_constant_buffers) {
             try {
                 const spirv_cross::SPIRType& ty = compiler.get_type(pc.base_type_id);
@@ -256,7 +277,6 @@ ReflectResult SpirvCrossReflector::reflect(const std::vector<uint32_t>& spirv,
             }
         }
 
-        // Workgroup size for compute shaders
         if (stage == ShaderStage::eCompute) {
             const auto wg = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 0);
             const auto wg_y = compiler.get_execution_mode_argument(spv::ExecutionModeLocalSize, 1);

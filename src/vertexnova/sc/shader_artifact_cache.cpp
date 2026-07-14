@@ -159,7 +159,8 @@ ShaderArtifactCache::ShaderArtifactCache(std::string cache_dir)
 
 std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
                                          const std::vector<CrossTarget>& targets,
-                                         const MetalBindingLayout& metal_layout) {
+                                         const MetalBindingLayout& metal_layout,
+                                         std::uint64_t metal_program_fingerprint) {
     uint64_t h = kFnv1a64Offset;
     hashStr(h, req.source);
     hashStr(h, req.file_path);
@@ -187,6 +188,8 @@ std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
         h ^= metal_layout.flatten_stride;
         h *= kFnv1a64Prime;
         h ^= metal_layout.buffer_base;
+        h *= kFnv1a64Prime;
+        h ^= metal_program_fingerprint;
         h *= kFnv1a64Prime;
     }
     return toHex(h);
