@@ -65,7 +65,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
 
     const bool wants_msl = std::find(desc.targets.begin(), desc.targets.end(), CrossTarget::eMSL) != desc.targets.end();
 
-    // ── Single pass, phase A: compile + validate every stage into memory ─────
+    // Single pass, phase A: compile + validate every stage into memory
     struct StageWork {
         CompileRequest req;
         StageArtifact artifact;
@@ -114,7 +114,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
         work.push_back(std::move(sw));
     }
 
-    // ── Program-link precompute (Metal only): one dense map for all stages ───
+    // Program-link precompute (Metal only): one dense map for all stages
     std::unique_ptr<MetalBindingAllocator> metal_program_map;
     std::uint64_t metal_fingerprint = 0;
     if (wants_msl && desc.metal_dense_program_map) {
@@ -141,7 +141,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
         VNE_LOG_WARN << "ShaderPipelineBuilder: metal_dense_program_map=false — using stage-local Metal maps";
     }
 
-    // ── Single pass, phase B: cache / reflect / cross-compile per stage ──────
+    // Single pass, phase B: cache / reflect / cross-compile per stage
     if (!desc.targets.empty() && !cross_compiler_) {
         result.code = ResultCode::eUnavailable;
         result.error = "ShaderPipelineBuilder: cross-compiler not available";

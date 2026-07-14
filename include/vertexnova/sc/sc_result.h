@@ -23,9 +23,7 @@
 
 namespace vne::sc {
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Result code
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Status code returned by every compiler pipeline operation.
@@ -51,9 +49,7 @@ inline bool succeeded(ResultCode code) noexcept {
     return static_cast<int32_t>(code) >= 0;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Result structs
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Result of a source-to-SPIR-V compilation.
 struct CompileResult {

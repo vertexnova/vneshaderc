@@ -124,7 +124,7 @@ option(VNE_SC_TESTS    "Build vnesc test suite (turn OFF when used as submodule)
 option(VNE_SC_EXAMPLES "Build vnesc example programs (turn OFF when used as submodule)" OFF)
 option(VNE_SC_TOOLS    "Build vnesc CLI tools (e.g. vnesc_shader_compiler)" ON)
 
-# ── Shader compiler backend options ──────────────────────────────────────────
+# Shader compiler backend options
 option(VNE_SC_GLSLANG    "Enable glslang GLSL→SPIR-V front-end (Phase 1, primary)" ON)
 option(VNE_SC_DXC        "Enable DXC HLSL→SPIR-V front-end (Phase 2 — stub only)" OFF)
 option(VNE_SC_SLANG      "Enable Slang front-end (Phase 3 — stub only)" OFF)

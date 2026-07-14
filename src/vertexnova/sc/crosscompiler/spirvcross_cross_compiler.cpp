@@ -28,7 +28,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.crosscompiler")
 
 namespace {
 
-// ── Sampler index post-processing ─────────────────────────────────────────────
+// Sampler index post-processing
 // SPIRV-Cross doesn't always correctly remap sampler indices when splitting combined
 // samplers. Fix by making each sampler's [[sampler(N)]] match its paired texture's
 // [[texture(N)]] index.
@@ -54,7 +54,7 @@ void fixCombinedSamplerIndices(std::string& msl) {
     }
 }
 
-// ── FixMSLFragmentSignature ────────────────────────────────────────────────────
+// FixMSLFragmentSignature
 // Ensure the fragment shader references a valid stage_in struct.
 // Ports the hard-won FixMSLFragmentSignature logic from the old spirv_cross_compiler.cpp.
 void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl) {
@@ -183,7 +183,7 @@ CrossCompileResult SpirvCrossCrossCompiler::crossCompile(const CrossCompileReque
     }
 }
 
-// ── MSL ───────────────────────────────────────────────────────────────────────
+// MSL
 CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req) {
     CrossCompileResult result;
     try {
@@ -194,7 +194,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
         opts.use_framebuffer_fetch_subpasses = false;
         compiler.set_msl_options(opts);
 
-        // ── Determine execution model ──────────────────────────────────────────
+        // Determine execution model
         std::string entry_name = "main";
         spv::ExecutionModel exec_model = spv::ExecutionModelMax;
         {
@@ -211,7 +211,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             return result;
         }
 
-        // ── Resource binding remapping ─────────────────────────────────────────
+        // Resource binding remapping
         // Dense (set,binding)→Metal index map. Prefer the program-wide signature from
         // ShaderPipelineBuilder so all stages agree; otherwise allocate stage-locally.
         // Note: do NOT call build_combined_image_samplers() for MSL.
@@ -284,7 +284,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
     }
 }
 
-// ── GLSL / GLSL ES ────────────────────────────────────────────────────────────
+// GLSL / GLSL ES
 CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& req, bool es) {
     CrossCompileResult result;
     try {
@@ -328,7 +328,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& re
     }
 }
 
-// ── WGSL ─────────────────────────────────────────────────────────────────────
+// WGSL
 CrossCompileResult SpirvCrossCrossCompiler::toWGSL(const CrossCompileRequest& req) {
     CrossCompileResult result;
     (void)req;
@@ -339,7 +339,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toWGSL(const CrossCompileRequest& re
     return result;
 }
 
-// ── FixMSLFragmentSignature ────────────────────────────────────────────────────
+// FixMSLFragmentSignature
 void SpirvCrossCrossCompiler::fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl) {
     ::fixMSLFragmentSignature(frag_msl, vert_msl);
 }

@@ -9,7 +9,7 @@ if(NOT TARGET vnesc)
     return()
 endif()
 
-# ── Google Test ───────────────────────────────────────────────────────────────
+# Google Test
 # Always build from source via FetchContent to guarantee static linkage.
 message(STATUS "vnesc tests: fetching googletest v1.17.0")
 include(FetchContent)

@@ -24,7 +24,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.cache")
 
 namespace vne::sc {
 
-// ── FNV-1a 64-bit hash ────────────────────────────────────────────────────────
+// FNV-1a 64-bit hash
 namespace {
 
 constexpr uint64_t kFnv1a64Prime = 0x100000001b3ULL;
@@ -55,7 +55,7 @@ std::string toHex(uint64_t v) {
     return os.str();
 }
 
-// ── Binary I/O helpers ────────────────────────────────────────────────────────
+// Binary I/O helpers
 struct Writer {
     std::ostringstream os{std::ios::binary};
     void u8(uint8_t v) { os.write(reinterpret_cast<const char*>(&v), 1); }
@@ -91,7 +91,7 @@ struct Reader {
     [[nodiscard]] bool ok() const { return is.good() || is.eof(); }
 };
 
-// ── StageArtifact binary format ───────────────────────────────────────────────
+// StageArtifact binary format
 // stage(u8) | entry_point(str) | spirv_count(u32) | spirv_data |
 // StageReflection | cross_count(u32) | { target(u8) | source(str) | ep(str) } * N
 
@@ -147,7 +147,7 @@ bool deserializeArtifact(const std::string& data, StageArtifact& out) {
 
 }  // namespace
 
-// ── ShaderArtifactCache ───────────────────────────────────────────────────────
+// ShaderArtifactCache
 
 ShaderArtifactCache::ShaderArtifactCache(std::string cache_dir)
     : cache_dir_(std::move(cache_dir)) {

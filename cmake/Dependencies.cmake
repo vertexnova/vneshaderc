@@ -3,7 +3,6 @@
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
 # cmake/Dependencies.cmake
-# ─────────────────────────
 # External dependencies for vnesc via pure FetchContent.
 #
 # Each dep can be overridden with a local path:
@@ -24,7 +23,7 @@ set(_vne_sc_sdk_tag "vulkan-sdk-1.3.296.0")
 set(_vne_sc_prev_pic "${CMAKE_POSITION_INDEPENDENT_CODE}")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# ── Helper: map VNE_SC_<DEP>_DIR to FETCHCONTENT_SOURCE_DIR_<DEP> ─────────────
+# Helper: map VNE_SC_<DEP>_DIR to FETCHCONTENT_SOURCE_DIR_<DEP>
 # FetchContent skips the network entirely when FETCHCONTENT_SOURCE_DIR_<upper>
 # is set, making it equivalent to the old vendored-submodule path.
 macro(_vne_sc_apply_override _fc_name _cache_var)
@@ -40,9 +39,7 @@ macro(_vne_sc_apply_override _fc_name _cache_var)
     endif()
 endmacro()
 
-# ══════════════════════════════════════════════════════════════════════════════
 # SPIRV-Cross — always required (cross-compilation + reflection)
-# ══════════════════════════════════════════════════════════════════════════════
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_TESTS             OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_GLSL              ON  CACHE BOOL "" FORCE)
@@ -78,9 +75,7 @@ foreach(_t spirv-cross-core spirv-cross-glsl spirv-cross-msl)
 endforeach()
 message(STATUS "[vnesc] SPIRV-Cross → ${_vne_sc_spirvcross_src}")
 
-# ══════════════════════════════════════════════════════════════════════════════
 # glslang + SPIRV-Headers  (when VNE_SC_GLSLANG=ON)
-# ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_GLSLANG)
     # SPIRV-Headers must be available before glslang configures.
     set(SPIRV_HEADERS_SKIP_INSTALL ON CACHE BOOL "" FORCE)
@@ -123,9 +118,7 @@ if(VNE_SC_GLSLANG)
     message(STATUS "[vnesc] glslang → ${_vne_sc_glslang_src}")
 endif()
 
-# ══════════════════════════════════════════════════════════════════════════════
 # SPIRV-Tools  (when VNE_SC_SPIRVTOOLS=ON)
-# ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_SPIRVTOOLS)
     set(SPIRV_SKIP_EXECUTABLES   ON  CACHE BOOL "" FORCE)
     set(SPIRV_SKIP_TESTS         ON  CACHE BOOL "" FORCE)
@@ -149,9 +142,7 @@ if(VNE_SC_SPIRVTOOLS)
     message(STATUS "[vnesc] SPIRV-Tools → ${_vne_sc_spirvtools_src}")
 endif()
 
-# ══════════════════════════════════════════════════════════════════════════════
 # nlohmann/json  (when VNE_SC_JSON=ON)
-# ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_JSON)
     set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
     set(JSON_Install    OFF CACHE BOOL "" FORCE)
@@ -203,9 +194,7 @@ function(_vne_sc_fix_dawn_abseil_randen_copts)
     endif()
 endfunction()
 
-# ══════════════════════════════════════════════════════════════════════════════
 # Dawn / Tint  (when VNE_SC_TINT=ON)  — FetchContent only, no submodule
-# ══════════════════════════════════════════════════════════════════════════════
 if(VNE_SC_TINT)
     set(DAWN_BUILD_SAMPLES           OFF CACHE BOOL "" FORCE)
     # Dawn can either bootstrap dependencies via Chromium's depot_tools/gclient
@@ -255,9 +244,7 @@ if(VNE_SC_TINT)
     message(STATUS "[vnesc] Dawn/Tint → FetchContent chromium/6723 (Release build)")
 endif()
 
-# ══════════════════════════════════════════════════════════════════════════════
 # Helper functions consumed by src/CMakeLists.txt
-# ══════════════════════════════════════════════════════════════════════════════
 function(vne_sc_link_spirvcross target)
     if(NOT VNE_SC_SPIRV_CROSS_INCLUDE_DIR OR
        NOT EXISTS "${VNE_SC_SPIRV_CROSS_INCLUDE_DIR}/spirv_cross.hpp")

@@ -29,7 +29,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.reflector")
 
 namespace {
 
-// ── Reflect struct members from a SPIRV-Cross block type ─────────────────────
+// Reflect struct members from a SPIRV-Cross block type
 std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cross::Compiler& compiler,
                                                                  const spirv_cross::SPIRType& block_type) {
     std::vector<vne::sc::ReflectedStructMember> members;
@@ -57,7 +57,7 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
     return members;
 }
 
-// ── Populate one ReflectedBindingInfo from a SPIRV-Cross resource ────────────
+// Populate one ReflectedBindingInfo from a SPIRV-Cross resource
 template<vne::sc::ReflectedResourceType Type>
 void appendBinding(const spirv_cross::Compiler& compiler,
                    const spirv_cross::CompilerMSL* msl,  // nullptr → MSL not a target

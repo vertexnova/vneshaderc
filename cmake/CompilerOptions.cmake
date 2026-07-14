@@ -3,12 +3,11 @@
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
 # cmake/CompilerOptions.cmake
-# ────────────────────────────
 # Platform detection, compile definitions, and optional sanitizer/coverage flags.
 # Included from the top-level CMakeLists.txt after project() and ProjectSetup.
 #==============================================================================
 
-# ── Platform Detection ────────────────────────────────────────────────────────
+# Platform Detection
 if(DEFINED VNE_TARGET_PLATFORM)
     message(STATUS "[vnesc] Using manually specified target platform: ${VNE_TARGET_PLATFORM}")
 else()
@@ -38,7 +37,7 @@ else()
 endif()
 message(STATUS "[vnesc] Platform: ${VNE_TARGET_PLATFORM}")
 
-# ── Global Compile Definitions ────────────────────────────────────────────────
+# Global Compile Definitions
 if(VNE_TARGET_PLATFORM     STREQUAL "macOS")
     add_compile_definitions(VNE_PLATFORM_MACOS)
 elseif(VNE_TARGET_PLATFORM STREQUAL "iOS")
@@ -55,7 +54,7 @@ elseif(VNE_TARGET_PLATFORM STREQUAL "Web")
     add_compile_definitions(VNE_PLATFORM_WEB)
 endif()
 
-# ── Code Coverage (gcov/lcov) ─────────────────────────────────────────────────
+# Code Coverage (gcov/lcov)
 if(ENABLE_COVERAGE)
     include(FindCoverage OPTIONAL)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
@@ -64,7 +63,7 @@ if(ENABLE_COVERAGE)
     endif()
 endif()
 
-# ── AddressSanitizer + UndefinedBehaviorSanitizer ────────────────────────────
+# AddressSanitizer + UndefinedBehaviorSanitizer
 if(ENABLE_ASAN)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang" AND NOT WIN32)
         add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)

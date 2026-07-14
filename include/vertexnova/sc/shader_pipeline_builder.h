@@ -30,9 +30,7 @@ class IShaderCrossCompiler;
 class IShaderReflector;
 class IShaderValidator;
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Pipeline descriptor
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Describes a complete pipeline build job — all stages and targets.
@@ -65,9 +63,7 @@ struct PipelineBuildResult {
     [[nodiscard]] bool ok() const noexcept { return succeeded(code); }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Pipeline builder interface
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Drives the full offline compilation sequence:
@@ -91,9 +87,7 @@ class IShaderPipelineBuilder {
     virtual PipelineBuildResult build(const PipelineBuildDesc& desc) = 0;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Concrete implementation
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Default @ref IShaderPipelineBuilder returned by @ref ShaderCompilerFactory.

@@ -11,7 +11,7 @@
 #   vnesc             — core: cache, factory, pipeline builder
 #==============================================================================
 
-# ── Interface library (public headers only) ───────────────────────────────────
+# Interface library (public headers only)
 add_library(vnesc_interface INTERFACE)
 target_include_directories(vnesc_interface INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
@@ -23,7 +23,7 @@ target_link_libraries(vnesc_interface INTERFACE
 target_compile_features(vnesc_interface INTERFACE cxx_std_20)
 add_library(vne::sc::interface ALIAS vnesc_interface)
 
-# ── glslang front-end (GLSL → SPIR-V) ────────────────────────────────────────
+# glslang front-end (GLSL → SPIR-V)
 if(VNE_SC_GLSLANG)
     add_library(vnesc_glslang STATIC
         vertexnova/sc/frontend/glslang_frontend.cpp)
@@ -46,7 +46,7 @@ if(VNE_SC_GLSLANG)
     add_library(vne::sc::glslang ALIAS vnesc_glslang)
 endif()
 
-# ── SPIRV-Cross cross-compiler + reflector (SPIRV-Cross only; not SPIRV-Headers) ─
+# SPIRV-Cross cross-compiler + reflector (SPIRV-Cross only; not SPIRV-Headers)
 if(NOT TARGET spirv-cross-core)
     message(FATAL_ERROR
         "vnesc_spirvcross requires SPIRV-Cross (target spirv-cross-core). "
@@ -62,7 +62,7 @@ target_link_libraries(vnesc_spirvcross PUBLIC vnesc_interface)
 set_target_properties(vnesc_spirvcross PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 add_library(vne::sc::spirvcross ALIAS vnesc_spirvcross)
 
-# ── Validator (SPIRV-Tools when available, no-op otherwise) ───────────────────
+# Validator (SPIRV-Tools when available, no-op otherwise)
 if(VNE_SC_SPIRVTOOLS)
     add_library(vnesc_validator STATIC
         vertexnova/sc/validator/spirvtools_validator.cpp)
@@ -77,7 +77,7 @@ target_include_directories(vnesc_validator PRIVATE ${PROJECT_SOURCE_DIR}/src)
 set_target_properties(vnesc_validator PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 add_library(vne::sc::validator ALIAS vnesc_validator)
 
-# ── Tint WGSL cross-compiler (optional) ───────────────────────────────────────
+# Tint WGSL cross-compiler (optional)
 if(VNE_SC_TINT)
     add_library(vnesc_tint STATIC
         vertexnova/sc/crosscompiler/tint_cross_compiler.cpp)
@@ -88,7 +88,7 @@ if(VNE_SC_TINT)
     add_library(vne::sc::tint ALIAS vnesc_tint)
 endif()
 
-# ── Core library (cache, factory, pipeline builder, bundle) ─────────────────
+# Core library (cache, factory, pipeline builder, bundle)
 add_library(vnesc STATIC
     vertexnova/sc/shader_artifact_cache.cpp
     vertexnova/sc/shader_reflection_binary.cpp

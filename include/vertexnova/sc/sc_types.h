@@ -29,9 +29,7 @@ inline constexpr uint32_t kDefaultMslVersion = 30000u;
 inline constexpr uint32_t kMetalBindingFlattenStrideDefault = 32u;
 inline constexpr uint32_t kMetalBindingBufferBaseDefault = 16u;
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Shader stage
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Identifies a single programmable stage in the graphics or compute pipeline.
 enum class ShaderStage : uint8_t {
@@ -66,9 +64,7 @@ inline bool operator&(ShaderStageFlags a, ShaderStageFlags b) noexcept {
     return (static_cast<uint32_t>(a) & static_cast<uint32_t>(b)) != 0;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Front-end selection
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Selects the compiler front-end that translates source code to SPIR-V.
 enum class FrontEnd : uint8_t {
@@ -77,9 +73,7 @@ enum class FrontEnd : uint8_t {
     eSlang = 2,    ///< Slang  — Slang to SPIR-V (stub).
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Cross-compilation target
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Shading-language target for SPIR-V cross-compilation.
 enum class CrossTarget : uint8_t {
@@ -90,9 +84,7 @@ enum class CrossTarget : uint8_t {
     eHLSL = 4,    ///< High-Level Shading Language.
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Source language
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Source language of the shader being compiled.
 enum class SourceLang : uint8_t {
@@ -103,9 +95,7 @@ enum class SourceLang : uint8_t {
     eSlang = 4,  ///< Slang.
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Optimisation level
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Controls SPIR-V optimisation during compilation.
 enum class OptLevel : uint8_t {
@@ -114,9 +104,7 @@ enum class OptLevel : uint8_t {
     ePerformance = 2,  ///< Optimise for runtime performance (default).
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Compile request
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// A preprocessor macro injected into the shader source via a @c #define preamble.
 struct ShaderMacro {
@@ -173,9 +161,7 @@ struct CrossCompileRequest {
     const class MetalBindingAllocator* metal_program_map = nullptr;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Reflection types
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Metal binding indices derived from SPIRV-Cross automatic slot assignment.
 struct MetalResourceSlot {
