@@ -59,7 +59,7 @@ void fixCombinedSamplerIndices(std::string& msl) {
 // Ports the hard-won FixMSLFragmentSignature logic from the old spirv_cross_compiler.cpp.
 void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl) {
     if (frag_msl.find("[[stage_in]]") != std::string::npos) {
-        // stage_in already present — verify the referenced struct exists
+        // stage_in already present - verify the referenced struct exists
         std::regex frag_fn_re(R"(fragment\s+(\w+)\s+(\w+)\s*\(([^)]*)\))");
         std::smatch frag_fn_m;
         if (std::regex_search(frag_msl, frag_fn_m, frag_fn_re)) {
@@ -69,7 +69,7 @@ void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl)
             if (std::regex_search(params, si_m, si_re)) {
                 const std::string si_type = si_m[1].str();
                 if (frag_msl.find("struct " + si_type) != std::string::npos) {
-                    return;  // struct exists — nothing to do
+                    return;  // struct exists - nothing to do
                 }
                 // Try to synthesize struct from vertex output
                 std::regex vo_re(R"(struct\s+(\w+)\s*\{[^}]*\[\[position\]\])");
@@ -99,7 +99,7 @@ void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl)
         return;
     }
 
-    // No stage_in — try to inject vertex output struct + stage_in parameter.
+    // No stage_in - try to inject vertex output struct + stage_in parameter.
     std::regex frag_fn_re(R"(fragment\s+(\w+)\s+(\w+)\s*\(([^)]*)\))");
     std::smatch frag_fn_m;
     if (!std::regex_search(frag_msl, frag_fn_m, frag_fn_re))
@@ -212,7 +212,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
         }
 
         // Resource binding remapping
-        // Dense (set,binding)→Metal index map. Prefer the program-wide signature from
+        // Dense (set,binding)->Metal index map. Prefer the program-wide signature from
         // ShaderPipelineBuilder so all stages agree; otherwise allocate stage-locally.
         // Note: do NOT call build_combined_image_samplers() for MSL.
         std::unique_ptr<vne::sc::MetalBindingAllocator> stage_local_map;
@@ -264,7 +264,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             fixCombinedSamplerIndices(result.source);
         }
 
-        // Extract final MSL entry point name (SPIRV-Cross may rename "main" → "main0")
+        // Extract final MSL entry point name (SPIRV-Cross may rename "main" -> "main0")
         try {
             result.entry_point = compiler.get_cleansed_entry_point_name(entry_name, exec_model);
         } catch (...) {
@@ -301,7 +301,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& re
         opts.vertex.flip_vert_y = false;
         compiler.set_common_options(opts);
 
-        // Build combined image samplers (required for GLSL — no separate images+samplers)
+        // Build combined image samplers (required for GLSL - no separate images+samplers)
         compiler.build_combined_image_samplers();
         for (const auto& c : compiler.get_combined_image_samplers()) {
             const std::string img_name = compiler.get_name(c.image_id);

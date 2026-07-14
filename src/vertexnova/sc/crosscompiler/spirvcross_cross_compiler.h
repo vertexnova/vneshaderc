@@ -12,7 +12,7 @@
 
 /**
  * @file spirvcross_cross_compiler.h
- * @brief SPIRV-Cross based cross-compiler: SPIR-V → MSL / GLSL / GLSL ES.
+ * @brief SPIRV-Cross based cross-compiler: SPIR-V -> MSL / GLSL / GLSL ES.
  */
 
 #include "vertexnova/sc/shader_cross_compiler.h"

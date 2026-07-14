@@ -214,7 +214,7 @@ std::optional<StageArtifact> ShaderArtifactCache::lookup(const std::string& key)
         return std::nullopt;
     StageArtifact artifact;
     if (!deserializeArtifact(data, artifact)) {
-        VNE_LOG_WARN << "ShaderArtifactCache: corrupt artifact at " << path << " — ignoring";
+        VNE_LOG_WARN << "ShaderArtifactCache: corrupt artifact at " << path << " - ignoring";
         return std::nullopt;
     }
     VNE_LOG_DEBUG << "ShaderArtifactCache: cache hit for key " << key;

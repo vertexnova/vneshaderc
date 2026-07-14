@@ -60,7 +60,7 @@ TEST(MetalBindingAllocatorTest, ProgramWideUnionIsDenseAndConsistent) {
 
     // Shared (0,0) must match stage-local union assignment.
     EXPECT_EQ(program.buffer(0, 0), layout.buffer_base);
-    // (1,0) and (2,1) are packed densely after (0,0) — not flatten indices.
+    // (1,0) and (2,1) are packed densely after (0,0) - not flatten indices.
     EXPECT_EQ(program.buffer(1, 0), layout.buffer_base + 1u);
     EXPECT_EQ(program.buffer(2, 1), layout.buffer_base + 2u);
     EXPECT_NE(program.buffer(2, 1), layout.buffer_base + 2u * layout.flatten_stride + 1u);

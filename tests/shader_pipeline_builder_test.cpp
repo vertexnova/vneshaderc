@@ -112,7 +112,7 @@ TEST_F(ShaderPipelineBuilderTest, MultiSetMetalSlotsAgreeAcrossStages) {
         return std::nullopt;
     };
 
-    // set0 binding0 is shared — must get the same Metal buffer slot in both stages.
+    // set0 binding0 is shared - must get the same Metal buffer slot in both stages.
     auto vs_frame = findMetalBuffer(vs->reflection, 0, 0);
     auto fs_frame = findMetalBuffer(fs->reflection, 0, 0);
     ASSERT_TRUE(vs_frame.has_value());

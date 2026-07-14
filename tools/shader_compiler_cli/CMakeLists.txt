@@ -8,7 +8,7 @@
 # Autodoc:   yes
 #==============================================================================
 
-# vnesc_shader_compiler — offline shader compilation CLI tool
+# vnesc_shader_compiler - offline shader compilation CLI tool
 
 #==============================================================================
 #                              Build Executable                                #

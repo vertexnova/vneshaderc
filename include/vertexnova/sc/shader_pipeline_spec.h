@@ -35,12 +35,12 @@ struct ShaderStageSpec {
 };
 
 /**
- * @brief One compile variant of a @ref ShaderPipelineSpec — the same stage
+ * @brief One compile variant of a @ref ShaderPipelineSpec - the same stage
  * files recompiled with a different set of preprocessor @c #define macros,
  * producing a separate, sibling-named output bundle.
  *
  * An empty @c name denotes the base/default variant (no defines, no bundle
- * suffix) — every manifest without an explicit "variants" array behaves as
+ * suffix) - every manifest without an explicit "variants" array behaves as
  * if it had exactly one variant with an empty name, preserving prior output
  * layout and naming for every existing manifest.
  */

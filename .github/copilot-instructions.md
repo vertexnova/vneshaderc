@@ -4,11 +4,11 @@ Use this for every PR review in this repository: optimize for correctness, safet
 
 ## Review output format
 
-- Start with a brief summary (1–3 bullets): what changed + biggest risks.
+- Start with a brief summary (1-3 bullets): what changed + biggest risks.
 - Then list issues grouped by severity:
-  - **BLOCKER** (must fix before merge)
-  - **MAJOR** (strongly recommended)
-  - **MINOR** (nice-to-have)
+ - **BLOCKER** (must fix before merge)
+ - **MAJOR** (strongly recommended)
+ - **MINOR** (nice-to-have)
 - For each issue: point to the exact file/area, explain *why*, and propose a concrete fix.
 - If you're unsure, ask a clarifying question rather than guessing.
 
@@ -32,7 +32,7 @@ Use this for every PR review in this repository: optimize for correctness, safet
 - Flag accidental O(N²) behavior, unnecessary allocations/copies, and hidden sync points.
 - Recommend `const&`, move semantics, reserve, and `std::span` when it helps.
 - Prefer algorithmic improvements over micro-optimizations.
-- Avoid premature "clever" tricks—only optimize with a clear benefit.
+- Avoid premature "clever" tricks - only optimize with a clear benefit.
 
 ### Concurrency
 
@@ -100,7 +100,7 @@ Apply this section when the PR changes files under `tests/` or `*_test.cpp`.
 
 ### Project layout
 
-- Library: **src/vertexnova/template/** — Public API: **include/vertexnova/template/** — Tests: **tests/** — Examples: **examples/**
+- Library: **src/vertexnova/template/** - Public API: **include/vertexnova/template/** - Tests: **tests/** - Examples: **examples/**
 - Dependencies: **deps/internal/** (e.g. vnecommon, vnelogging), **deps/external/** (e.g. googletest). No top-level `external/` or `libs/`.
 
 ### Formatting and static analysis
@@ -115,7 +115,7 @@ Keep comments concrete: cite the guideline or rule and suggest a specific fix wh
 
 ## Checklist
 
-- [ ] Summary (1–3 bullets) and issues grouped by BLOCKER / MAJOR / MINOR with file, reason, and fix.
+- [ ] Summary (1-3 bullets) and issues grouped by BLOCKER / MAJOR / MINOR with file, reason, and fix.
 - [ ] C++ focus areas considered (correctness, memory, perf, concurrency, errors, security, build, docs, CI).
 - [ ] Naming/style and test rules (if PR touches tests) applied; violations cited with suggested fix.
 - [ ] Repo layout and deps respected; no unnecessary deps edits.

@@ -133,11 +133,11 @@ option(VNE_SC_TOOLS    "Build vnesc CLI tools (e.g. vnesc_shader_compiler)" ON)
 #                         Shader Compiler Backends                             #
 #==============================================================================
 
-option(VNE_SC_GLSLANG    "Enable glslang GLSL→SPIR-V front-end (Phase 1, primary)" ON)
-option(VNE_SC_DXC        "Enable DXC HLSL→SPIR-V front-end (Phase 2 — stub only)" OFF)
-option(VNE_SC_SLANG      "Enable Slang front-end (Phase 3 — stub only)" OFF)
+option(VNE_SC_GLSLANG    "Enable glslang GLSL->SPIR-V front-end (Phase 1, primary)" ON)
+option(VNE_SC_DXC        "Enable DXC HLSL->SPIR-V front-end (Phase 2 - stub only)" OFF)
+option(VNE_SC_SLANG      "Enable Slang front-end (Phase 3 - stub only)" OFF)
 option(VNE_SC_SPIRVTOOLS "Enable SPIRV-Tools SPIR-V validator (OFF = no-op validator)" OFF)
-option(VNE_SC_TINT       "Enable Dawn Tint SPIR-V→WGSL cross-compiler (slow first configure)" OFF)
+option(VNE_SC_TINT       "Enable Dawn Tint SPIR-V->WGSL cross-compiler (slow first configure)" OFF)
 option(VNE_SC_JSON       "Enable nlohmann/json for manifests and bundle metadata" ON)
 
 option(ENABLE_DOXYGEN "Enable Doxygen documentation builds" OFF)

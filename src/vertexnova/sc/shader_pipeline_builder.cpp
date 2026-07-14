@@ -138,7 +138,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
             VNE_LOG_DEBUG << oss.str();
         }
     } else if (wants_msl) {
-        VNE_LOG_WARN << "ShaderPipelineBuilder: metal_dense_program_map=false — using stage-local Metal maps";
+        VNE_LOG_WARN << "ShaderPipelineBuilder: metal_dense_program_map=false - using stage-local Metal maps";
     }
 
     // Single pass, phase B: cache / reflect / cross-compile per stage
@@ -225,7 +225,7 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
         result.artifact.stages.push_back(std::move(sw.artifact));
     }
 
-    VNE_LOG_INFO << "ShaderPipelineBuilder: build complete — " << result.artifact.stages.size() << " stage(s)";
+    VNE_LOG_INFO << "ShaderPipelineBuilder: build complete - " << result.artifact.stages.size() << " stage(s)";
     result.code = ResultCode::eSuccess;
     return result;
 }

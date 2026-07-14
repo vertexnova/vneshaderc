@@ -8,10 +8,10 @@
 # Autodoc:   yes
 #==============================================================================
 
-# 03_textured_pipeline_spec — JSON pipeline spec → MSL bundle
+# 03_textured_pipeline_spec - JSON pipeline spec -> MSL bundle
 
 if(NOT VNE_SC_JSON)
-    message(STATUS "03_textured_pipeline_spec requires VNE_SC_JSON=ON — skipping")
+    message(STATUS "03_textured_pipeline_spec requires VNE_SC_JSON=ON - skipping")
     return()
 endif()
 

@@ -20,11 +20,11 @@ Executables are under `build/bin/examples/glsl/<example>/`.
 
 | Example | Focus |
 |---------|--------|
-| [glsl/01_hello_compiler](glsl/01_hello_compiler/) | Inline GLSL → MSL, `PipelineBuildDesc` |
+| [glsl/01_hello_compiler](glsl/01_hello_compiler/) | Inline GLSL -> MSL, `PipelineBuildDesc` |
 | [glsl/02_triangle_bundle](glsl/02_triangle_bundle/) | File-based shaders, reflection dump, bundle I/O |
 | [glsl/03_textured_pipeline_spec](glsl/03_textured_pipeline_spec/) | `.pipeline.json` spec, `MetalBindingLayout` |
 
 ## Shared utilities
 
-- `common/shader_loader.h` — load a shader file into a `std::string`
-- `common/logging_guard.h` — configures `vne::log` console output; each example uses `LoggingGuard` and `VNE_LOG_*` for its own messages (library internals log through the same sink)
+- `common/shader_loader.h` - load a shader file into a `std::string`
+- `common/logging_guard.h` - configures `vne::log` console output; each example uses `LoggingGuard` and `VNE_LOG_*` for its own messages (library internals log through the same sink)

@@ -21,20 +21,20 @@
 
 ## About
 
-**vnesc** is an offline shader compiler library that transforms GLSL source into a portable `.vneshader` bundle: SPIR-V bytecode, cross-compiled MSL/WGSL/HLSL output, and typed resource-binding reflection — all ready for direct consumption by [vnerhi](https://github.com/vertexnova/vnerhi).
+**vnesc** is an offline shader compiler library that transforms GLSL source into a portable `.vneshader` bundle: SPIR-V bytecode, cross-compiled MSL/WGSL/HLSL output, and typed resource-binding reflection - all ready for direct consumption by [vnerhi](https://github.com/vertexnova/vnerhi).
 
 It is a core component of [VertexNova](https://github.com/vertexnova), a multi-backend graphics engine targeting Vulkan, Metal, WebGPU, and OpenGL/ES from a single source.
 
 ## Features
 
-- **Full offline pipeline**: GLSL → SPIR-V → validate → reflect → cross-compile in one call
+- **Full offline pipeline**: GLSL -> SPIR-V -> validate -> reflect -> cross-compile in one call
 - **Multi-target output**: MSL (Metal), WGSL (WebGPU), HLSL, GLSL ES from a single GLSL source
 - **Typed reflection**: per-binding resource metadata with typed optional backend slots (`MetalResourceSlot`, `WebGpuResourceSlot`)
 - **Artifact cache**: content-addressed file cache skips recompiling unchanged shaders
-- **`.vneshader` bundle**: self-contained directory — SPIR-V + cross-compiled sources + binary reflection
+- **`.vneshader` bundle**: self-contained directory - SPIR-V + cross-compiled sources + binary reflection
 - **JSON pipeline spec**: declare a full multi-stage pipeline in a `.pipeline.json` file; `include_paths` resolve relative to the spec file
 - **CLI tool**: `vnesc_shader_compiler` drives the full pipeline from the command line
-- **Python batch tool**: `tools/compile_shaders.py` — parallel glob-aware wrapper around the CLI
+- **Python batch tool**: `tools/compile_shaders.py` - parallel glob-aware wrapper around the CLI
 - **Extensible interfaces**: `IShaderFrontEnd`, `IShaderCrossCompiler`, `IShaderReflector`, `IShaderValidator`
 - **C++20, header-only public API**: single umbrella include `<vertexnova/sc/vnesc.h>`
 
@@ -73,11 +73,11 @@ target_link_libraries(your_target PRIVATE vnesc vnesc_glslang)
 ```cmake
 target_link_libraries(your_target PRIVATE
     vnesc          # core: cache, factory, pipeline builder, bundle I/O
-    vnesc_glslang) # glslang GLSL → SPIR-V front-end (required for GLSL source)
+    vnesc_glslang) # glslang GLSL -> SPIR-V front-end (required for GLSL source)
 ```
 
 `vnesc` carries the public headers, SPIRV-Cross cross-compiler, reflector, and bundle writer.
-`vnesc_glslang` adds the GLSL → SPIR-V front-end; omit it only if you supply SPIR-V directly.
+`vnesc_glslang` adds the GLSL -> SPIR-V front-end; omit it only if you supply SPIR-V directly.
 
 ### Single umbrella include
 
@@ -136,11 +136,11 @@ Options: `-t` / `-BuildType` build type, `-a` / `-Action` action (`configure_and
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `VNE_SC_GLSLANG` | `ON` | Enable glslang GLSL → SPIR-V front-end |
+| `VNE_SC_GLSLANG` | `ON` | Enable glslang GLSL -> SPIR-V front-end |
 | `VNE_SC_JSON` | `ON` | Enable nlohmann/json for `.pipeline.json` specs and bundle manifests |
 | `VNE_SC_SPIRVTOOLS` | `OFF` | Enable SPIRV-Tools SPIR-V validator |
-| `VNE_SC_TINT` | `OFF` | Enable Dawn Tint SPIR-V → WGSL cross-compiler |
-| `VNE_SC_DXC` | `OFF` | Enable DXC HLSL → SPIR-V front-end (stub) |
+| `VNE_SC_TINT` | `OFF` | Enable Dawn Tint SPIR-V -> WGSL cross-compiler |
+| `VNE_SC_DXC` | `OFF` | Enable DXC HLSL -> SPIR-V front-end (stub) |
 | `VNE_SC_SLANG` | `OFF` | Enable Slang front-end (stub) |
 | `VNE_SC_TESTS` | `ON` | Build the test suite |
 | `VNE_SC_EXAMPLES` | `OFF` | Build example programs |
@@ -168,7 +168,7 @@ auto result = factory->compile(req);
 if (!result.ok()) {
     // result.errors contains per-error messages
 }
-// result.spirv — compiled SPIR-V words
+// result.spirv - compiled SPIR-V words
 ```
 
 ### Build a full pipeline (recommended)
@@ -267,8 +267,8 @@ A compiled `.vneshader` is a directory:
 The binary reflection (`reflection.bin`) stores typed per-backend resource slots:
 
 ```
-metal:  { buffer, texture, sampler }   — present only when MSL was compiled
-webgpu: { group, binding }             — present only when WGSL was compiled
+metal:  { buffer, texture, sampler }  - present only when MSL was compiled
+webgpu: { group, binding }            - present only when WGSL was compiled
 ```
 
 ## Platform support
@@ -281,7 +281,7 @@ webgpu: { group, binding }             — present only when WGSL was compiled
 
 ## Documentation
 
-- **Architecture doc**: [docs/vertexnova/sc/](docs/vertexnova/sc/) — pipeline design, reflection format, bundle layout
+- **Architecture doc**: [docs/vertexnova/sc/](docs/vertexnova/sc/) - pipeline design, reflection format, bundle layout
 - **API docs**: Build with Doxygen:
 
   ```bash
@@ -309,7 +309,7 @@ The **VERSION** file at the repo root is the single source of truth; CMake reads
 
 ## License
 
-Apache License 2.0 — See [LICENSE](LICENSE) for details.
+Apache License 2.0 - See [LICENSE](LICENSE) for details.
 
 ---
 

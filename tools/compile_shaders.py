@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""vnesc offline shader compiler — wrapper around vnesc_shader_compiler with naga WGSL fallback.
+"""vnesc offline shader compiler - wrapper around vnesc_shader_compiler with naga WGSL fallback.
 
 Usage:
     compile_shaders.py --manifest <glob-or-path> --output <dir>
@@ -157,7 +157,7 @@ def patch_bundle_with_wgsl(bundle_dir: Path, wgsl_map: dict[int, tuple[str, str]
 
 
 # ---------------------------------------------------------------------------
-# Naga: SPIR-V → WGSL
+# Naga: SPIR-V -> WGSL
 # ---------------------------------------------------------------------------
 
 _SCRIPT_DIR = Path(__file__).resolve().parent
@@ -186,7 +186,7 @@ def find_naga(override: str | None) -> Path | None:
 
 
 def _naga_wgsl_entry(stage_type: int) -> str:
-    """naga preserves GLSL entry point names — all our GLSL shaders use 'main'."""
+    """naga preserves GLSL entry point names - all our GLSL shaders use 'main'."""
     return "main"
 
 
@@ -209,7 +209,7 @@ def generate_wgsl_for_bundle(bundle_dir: Path, naga: Path, verbose: bool, dry_ru
         stage = stages[idx]
         spv_file = stage.get("spirv_file", "")
         if not spv_file:
-            sys.stderr.write(f"error: stage {idx} has no SPIR-V file — cannot generate WGSL\n")
+            sys.stderr.write(f"error: stage {idx} has no SPIR-V file - cannot generate WGSL\n")
             return False
 
         spv_path = bundle_dir / spv_file
@@ -217,7 +217,7 @@ def generate_wgsl_for_bundle(bundle_dir: Path, naga: Path, verbose: bool, dry_ru
             sys.stderr.write(f"error: SPIR-V not found: {spv_path}\n")
             return False
 
-        # Derive WGSL filename from SPV filename: foo.vert.spv → foo.vert.wgsl
+        # Derive WGSL filename from SPV filename: foo.vert.spv -> foo.vert.wgsl
         stem = spv_path.stem  # e.g. "teapot.vert"
         wgsl_name = stem + ".wgsl"
         wgsl_path = bundle_dir / wgsl_name
@@ -228,7 +228,7 @@ def generate_wgsl_for_bundle(bundle_dir: Path, naga: Path, verbose: bool, dry_ru
             print(f"[dry-run] {' '.join(cmd)}")
         else:
             if verbose:
-                print(f"  naga: {spv_file} → {wgsl_name}")
+                print(f"  naga: {spv_file} -> {wgsl_name}")
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 sys.stderr.write(f"error: naga failed for {spv_path}:\n{result.stderr}\n")
@@ -326,7 +326,7 @@ def compile_one(
         for bundle_dir in bundle_dirs:
             if bundle_dir.is_dir() and _bundle_missing_wgsl(bundle_dir):
                 if verbose:
-                    print(f"  WGSL missing — running naga fallback for: {bundle_dir.name}")
+                    print(f"  WGSL missing - running naga fallback for: {bundle_dir.name}")
                 if not generate_wgsl_for_bundle(bundle_dir, naga, verbose=verbose, dry_run=False):
                     return False, str(manifest), f"naga WGSL generation failed for {bundle_dir}"
 
@@ -358,11 +358,11 @@ def expand_manifests(patterns: list[str]) -> list[Path]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="vnesc offline shader compiler — wrapper with naga WGSL fallback",
+        description="vnesc offline shader compiler - wrapper with naga WGSL fallback",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "WGSL fallback:\n"
-            "  When the bundle is missing WGSL files, naga is used to convert SPIR-V→WGSL\n"
+            "  When the bundle is missing WGSL files, naga is used to convert SPIR-V->WGSL\n"
             "  and bundle.header is patched automatically.\n"
             "  Install naga: cargo install naga-cli\n"
             "  Or download:  python3 tools/download_naga.py\n"
@@ -406,7 +406,7 @@ def main() -> int:
             print(f"naga: {naga}")
         elif not naga:
             print(
-                "info: naga not found — WGSL will be skipped "
+                "info: naga not found - WGSL will be skipped "
                 "(install via: cargo install naga-cli  or  python3 tools/download_naga.py)"
             )
 
@@ -450,7 +450,7 @@ def main() -> int:
         return 1
 
     if not args.dry_run:
-        print(f"compiled {len(manifests)} manifest(s) → {output_root}")
+        print(f"compiled {len(manifests)} manifest(s) -> {output_root}")
     return 0
 
 

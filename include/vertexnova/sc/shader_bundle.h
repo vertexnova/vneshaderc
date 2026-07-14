@@ -32,7 +32,7 @@ struct BundleStageFiles {
     std::string entry_point;  ///< SPIR-V / Vulkan entry point
     std::string spirv_file;
     std::string msl_file;
-    std::string msl_entry_point;  ///< MSL entry (SPIRV-Cross may rename main→main0)
+    std::string msl_entry_point;  ///< MSL entry (SPIRV-Cross may rename main->main0)
     std::string wgsl_file;
     std::string wgsl_entry_point;  ///< WGSL entry point
 };
@@ -50,9 +50,9 @@ struct ShaderBundleHeader {
  * @brief Writes a @c .vneshader directory from a compiled @ref ShaderArtifact.
  *
  * Creates:
- * - @c bundle.header  — binary index for vnerhi
- * - @c reflection.bin — @ref ProgramReflection
- * - @c manifest.json  — human-readable index (when JSON enabled)
+ * - @c bundle.header - binary index for vnerhi
+ * - @c reflection.bin - @ref ProgramReflection
+ * - @c manifest.json - human-readable index (when JSON enabled)
  * - Per-stage @c .spv / @c .msl / @c .wgsl files
  */
 bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::path& bundle_dir);

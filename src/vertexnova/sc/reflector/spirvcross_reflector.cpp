@@ -60,7 +60,7 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
 // Populate one ReflectedBindingInfo from a SPIRV-Cross resource
 template<vne::sc::ReflectedResourceType Type>
 void appendBinding(const spirv_cross::Compiler& compiler,
-                   const spirv_cross::CompilerMSL* msl,  // nullptr → MSL not a target
+                   const spirv_cross::CompilerMSL* msl,  // nullptr -> MSL not a target
                    bool has_webgpu,
                    const vne::sc::MetalBindingAllocator* metal_map,
                    const spirv_cross::Resource& res,

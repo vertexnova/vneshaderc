@@ -7,7 +7,7 @@ vnesc is a static shader-compiler library. Scripts pass `VNE_SC_*` CMake options
 ## Quick start
 
 ```bash
-# Linux / macOS — dev build with tests (default)
+# Linux / macOS - dev build with tests (default)
 ./scripts/build_linux.sh --dev -a test
 ./scripts/build_macos.sh --dev -a test
 
@@ -79,4 +79,4 @@ Run all Windows scripts from a **Visual Studio Developer Command Prompt**.
 
 ## Other utilities
 
-- `clang_formatter.py` — format `src/`, `include/`, `tests/` with project `.clang-format`
+- `clang_formatter.py` - format `src/`, `include/`, `tests/` with project `.clang-format`

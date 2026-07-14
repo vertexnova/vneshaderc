@@ -68,9 +68,9 @@ inline bool operator&(ShaderStageFlags a, ShaderStageFlags b) noexcept {
 
 /// Selects the compiler front-end that translates source code to SPIR-V.
 enum class FrontEnd : uint8_t {
-    eGlslang = 0,  ///< glslang — vulkan's GLSL (4.5) to SPIR-V (active).
-    eDxc = 1,      ///< DXC    — HLSL to SPIR-V (stub).
-    eSlang = 2,    ///< Slang  — Slang to SPIR-V (stub).
+    eGlslang = 0,  ///< glslang - vulkan's GLSL (4.5) to SPIR-V (active).
+    eDxc = 1,      ///< DXC   - HLSL to SPIR-V (stub).
+    eSlang = 2,    ///< Slang - Slang to SPIR-V (stub).
 };
 
 // Cross-compilation target
@@ -99,7 +99,7 @@ enum class SourceLang : uint8_t {
 
 /// Controls SPIR-V optimisation during compilation.
 enum class OptLevel : uint8_t {
-    eNone = 0,         ///< No optimisation — fastest compile, largest output.
+    eNone = 0,         ///< No optimisation - fastest compile, largest output.
     eSize = 1,         ///< Minimise SPIR-V binary size.
     ePerformance = 2,  ///< Optimise for runtime performance (default).
 };
@@ -129,7 +129,7 @@ struct CompileRequest {
     std::vector<std::string> include_dirs;        ///< Directories searched for @c #include.
     bool debug_info = false;                      ///< Embed debug information in SPIR-V.
     bool validate = true;                         ///< Validate SPIR-V after generation.
-    uint32_t glsl_version = kDefaultGlslVersion;  ///< GLSL version (e.g. 450 → @c #version 450).
+    uint32_t glsl_version = kDefaultGlslVersion;  ///< GLSL version (e.g. 450 -> @c #version 450).
 };
 
 /// Metal buffer-index layout configuration.
@@ -142,13 +142,13 @@ struct MetalBindingLayout {
 };
 
 /**
- * @brief Describes a single SPIR-V → target cross-compilation job.
+ * @brief Describes a single SPIR-V -> target cross-compilation job.
  */
 struct CrossCompileRequest {
     std::vector<uint32_t> spirv;  ///< Input SPIR-V binary.
     CrossTarget target = CrossTarget::eMSL;
     ShaderStage stage = ShaderStage::eVertex;
-    uint32_t msl_version = kDefaultMslVersion;  ///< MSL version (e.g. 30000 → Metal 3.0).
+    uint32_t msl_version = kDefaultMslVersion;  ///< MSL version (e.g. 30000 -> Metal 3.0).
     uint32_t glsl_version = kDefaultGlslVersion;
     bool fix_msl_fragment_signature = true;  ///< Align fragment stage_in with vertex output.
     MetalBindingLayout metal_layout;         ///< Legacy flatten params (buffer_base still used by dense alloc).

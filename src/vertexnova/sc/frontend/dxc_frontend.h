@@ -13,7 +13,7 @@
 /**
  * @file dxc_frontend.h
  * @brief DXC front-end: compiles HLSL source to SPIR-V.
- * @note SFI — stub implementation.  @ref isAvailable returns @c false and
+ * @note SFI - stub implementation.  @ref isAvailable returns @c false and
  */
 
 #include "vertexnova/sc/shader_frontend.h"
@@ -21,9 +21,9 @@
 namespace vne::sc {
 
 /**
- * @brief HLSL → SPIR-V front-end using the DirectX Shader Compiler (DXC).
+ * @brief HLSL -> SPIR-V front-end using the DirectX Shader Compiler (DXC).
  *
- * @note SFI — stub.  All methods are no-ops until the DXC back-end is implemented.
+ * @note SFI - stub.  All methods are no-ops until the DXC back-end is implemented.
  */
 class DxcFrontEnd final : public IShaderFrontEnd {
    public:

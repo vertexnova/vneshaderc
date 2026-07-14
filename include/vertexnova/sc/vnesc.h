@@ -12,7 +12,7 @@
 
 /**
  * @file vnesc.h
- * @brief Umbrella header — includes the complete vnesc public API.
+ * @brief Umbrella header - includes the complete vnesc public API.
  * For most use cases, including this single file is sufficient.
  */
 

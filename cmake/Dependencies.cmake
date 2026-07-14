@@ -32,7 +32,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #                         FetchContent Path Overrides                          #
 #==============================================================================
 
-# Map VNE_SC_<DEP>_DIR → FETCHCONTENT_SOURCE_DIR_<DEP>.
+# Map VNE_SC_<DEP>_DIR -> FETCHCONTENT_SOURCE_DIR_<DEP>.
 # FetchContent skips the network when FETCHCONTENT_SOURCE_DIR_<upper> is set.
 macro(_vne_sc_apply_override _fc_name _cache_var)
     if(DEFINED ${_cache_var} AND NOT "${${_cache_var}}" STREQUAL "")
@@ -40,7 +40,7 @@ macro(_vne_sc_apply_override _fc_name _cache_var)
             string(TOUPPER "${_fc_name}" _fc_upper)
             string(REPLACE "-" "_" _fc_upper "${_fc_upper}")
             set("FETCHCONTENT_SOURCE_DIR_${_fc_upper}" "${${_cache_var}}" CACHE PATH "" FORCE)
-            message(STATUS "[vnesc] ${_fc_name}: local override → ${${_cache_var}}")
+            message(STATUS "[vnesc] ${_fc_name}: local override -> ${${_cache_var}}")
         else()
             message(WARNING "[vnesc] ${_cache_var}='${${_cache_var}}' has no CMakeLists.txt; ignored.")
         endif()
@@ -85,7 +85,7 @@ foreach(_t spirv-cross-core spirv-cross-glsl spirv-cross-msl)
         set_target_properties(${_t} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
     endif()
 endforeach()
-message(STATUS "[vnesc] SPIRV-Cross → ${_vne_sc_spirvcross_src}")
+message(STATUS "[vnesc] SPIRV-Cross -> ${_vne_sc_spirvcross_src}")
 
 #==============================================================================
 #                          glslang + SPIRV-Headers                             #
@@ -103,7 +103,7 @@ if(VNE_SC_GLSLANG)
     FetchContent_GetProperties(SPIRV-Headers SOURCE_DIR _vne_sc_spirvhdr_src)
     # glslang locates SPIRV-Headers via this cache variable.
     set(SPIRV-Headers_SOURCE_DIR "${_vne_sc_spirvhdr_src}" CACHE PATH "" FORCE)
-    message(STATUS "[vnesc] SPIRV-Headers → ${_vne_sc_spirvhdr_src}")
+    message(STATUS "[vnesc] SPIRV-Headers -> ${_vne_sc_spirvhdr_src}")
 
     set(BUILD_EXTERNAL          OFF CACHE BOOL "" FORCE)
     set(ENABLE_GLSLANG_BINARIES OFF CACHE BOOL "" FORCE)
@@ -130,7 +130,7 @@ if(VNE_SC_GLSLANG)
         endif()
     endforeach()
     FetchContent_GetProperties(glslang SOURCE_DIR _vne_sc_glslang_src)
-    message(STATUS "[vnesc] glslang → ${_vne_sc_glslang_src}")
+    message(STATUS "[vnesc] glslang -> ${_vne_sc_glslang_src}")
 endif()
 
 #==============================================================================
@@ -157,7 +157,7 @@ if(VNE_SC_SPIRVTOOLS)
         endif()
     endforeach()
     FetchContent_GetProperties(SPIRV-Tools SOURCE_DIR _vne_sc_spirvtools_src)
-    message(STATUS "[vnesc] SPIRV-Tools → ${_vne_sc_spirvtools_src}")
+    message(STATUS "[vnesc] SPIRV-Tools -> ${_vne_sc_spirvtools_src}")
 endif()
 
 #==============================================================================
@@ -175,7 +175,7 @@ if(VNE_SC_JSON)
         GIT_SHALLOW    TRUE)
     FetchContent_MakeAvailable(nlohmann_json)
     FetchContent_GetProperties(nlohmann_json SOURCE_DIR _vne_sc_json_src)
-    message(STATUS "[vnesc] nlohmann/json → ${_vne_sc_json_src}")
+    message(STATUS "[vnesc] nlohmann/json -> ${_vne_sc_json_src}")
 endif()
 
 #==============================================================================
@@ -223,7 +223,7 @@ endfunction()
 #                              Dawn / Tint (optional)                          #
 #==============================================================================
 
-# FetchContent only — no submodule. When VNE_SC_TINT=ON.
+# FetchContent only - no submodule. When VNE_SC_TINT=ON.
 if(VNE_SC_TINT)
     set(DAWN_BUILD_SAMPLES           OFF CACHE BOOL "" FORCE)
     # Dawn can either bootstrap dependencies via Chromium's depot_tools/gclient
@@ -257,7 +257,7 @@ if(VNE_SC_TINT)
     set(TINT_BUILD_FUZZERS           OFF CACHE BOOL "" FORCE)
     set(TINT_BUILD_IR_FUZZER         OFF CACHE BOOL "" FORCE)
 
-    # Build Dawn/Tint in Release even for Debug projects — it's a large compiler
+    # Build Dawn/Tint in Release even for Debug projects - it's a large compiler
     # library that has negligible benefit from debug symbols.
     set(_vne_sc_saved_build_type "${CMAKE_BUILD_TYPE}")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
@@ -270,7 +270,7 @@ if(VNE_SC_TINT)
     FetchContent_MakeAvailable(dawn)
     _vne_sc_fix_dawn_abseil_randen_copts()
     set(CMAKE_BUILD_TYPE "${_vne_sc_saved_build_type}" CACHE STRING "" FORCE)
-    message(STATUS "[vnesc] Dawn/Tint → FetchContent chromium/6723 (Release build)")
+    message(STATUS "[vnesc] Dawn/Tint -> FetchContent chromium/6723 (Release build)")
 endif()
 
 #==============================================================================

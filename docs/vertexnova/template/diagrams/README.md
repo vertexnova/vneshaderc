@@ -25,14 +25,14 @@ drawio -x -f png -o . .
 ### Option 2: draw.io Web
 
 1. Open [app.diagrams.net](https://app.diagrams.net)
-2. File → Open from → Device → select each `.drawio` file
-3. File → Export as → PNG
+2. File -> Open from -> Device -> select each `.drawio` file
+3. File -> Export as -> PNG
 4. Save to this `diagrams/` folder
 
 ### Files
 
 | Source | Output | Used in template.md | Contents |
 |--------|--------|---------------------|----------|
-| context.drawio | context.png | Overview | C4 system context: Application → VneTemplate (get_version, hello) |
+| context.drawio | context.png | Overview | C4 system context: Application -> VneTemplate (get_version, hello) |
 | api.drawio | api.png | API usage | API flow: get_version(), hello() |
 | architecture.drawio | architecture.png | Project layout | Folder structure and build flow |

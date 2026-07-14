@@ -11,7 +11,7 @@
 # GLSL examples (require VNE_SC_GLSLANG=ON)
 
 if(NOT VNE_SC_GLSLANG)
-    message(STATUS "vnesc GLSL examples require VNE_SC_GLSLANG=ON — skipping")
+    message(STATUS "vnesc GLSL examples require VNE_SC_GLSLANG=ON - skipping")
     return()
 endif()
 

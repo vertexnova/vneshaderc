@@ -8,7 +8,7 @@
 # Autodoc:   yes
 #==============================================================================
 
-# 01_hello_compiler — inline GLSL → MSL via PipelineBuildDesc
+# 01_hello_compiler - inline GLSL -> MSL via PipelineBuildDesc
 
 #==============================================================================
 #                              Build Executable                                #

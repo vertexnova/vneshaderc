@@ -44,7 +44,7 @@ class ShaderCompilerFactory {
     /// Creates a front-end for the given source language.
     static std::shared_ptr<IShaderFrontEnd> createFrontEnd(SourceLang lang);
 
-    /// Creates the SPIR-V → target cross-compiler (dispatches MSL/GLSL to SPIRV-Cross, WGSL to Tint).
+    /// Creates the SPIR-V -> target cross-compiler (dispatches MSL/GLSL to SPIRV-Cross, WGSL to Tint).
     static std::shared_ptr<IShaderCrossCompiler> createCrossCompiler();
 
     /// Creates the SPIRV-Cross cross-compiler only.

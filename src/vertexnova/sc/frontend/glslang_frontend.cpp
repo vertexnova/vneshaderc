@@ -321,7 +321,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
     }
 
     result.code = result.warnings.empty() ? ResultCode::eSuccess : ResultCode::eCompileWarnings;
-    VNE_LOG_DEBUG << "GlslangFrontEnd: compiled " << source_path << " → " << result.spirv.size() << " SPIR-V words";
+    VNE_LOG_DEBUG << "GlslangFrontEnd: compiled " << source_path << " -> " << result.spirv.size() << " SPIR-V words";
     return result;
 }
 

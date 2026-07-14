@@ -9,12 +9,12 @@
 #==============================================================================
 
 # vnesc library targets:
-#   vnesc_interface   — public headers; no compiled code
-#   vnesc_glslang     — glslang GLSL → SPIR-V front-end (conditional)
-#   vnesc_spirvcross  — SPIRV-Cross cross-compiler + reflector (always built)
-#   vnesc_validator   — SPIR-V validator (SPIRV-Tools or no-op)
-#   vnesc_tint        — Dawn Tint SPIR-V → WGSL (optional)
-#   vnesc             — core: cache, factory, pipeline builder, bundle
+#   vnesc_interface  - public headers; no compiled code
+#   vnesc_glslang    - glslang GLSL -> SPIR-V front-end (conditional)
+#   vnesc_spirvcross - SPIRV-Cross cross-compiler + reflector (always built)
+#   vnesc_validator  - SPIR-V validator (SPIRV-Tools or no-op)
+#   vnesc_tint       - Dawn Tint SPIR-V -> WGSL (optional)
+#   vnesc            - core: cache, factory, pipeline builder, bundle
 
 #==============================================================================
 #                             Interface Library                                #

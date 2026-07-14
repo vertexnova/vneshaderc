@@ -11,4 +11,4 @@
 
 #include "noop_validator.h"
 
-// Stub — implementation lives in the header.
+// Stub - implementation lives in the header.

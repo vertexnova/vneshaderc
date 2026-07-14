@@ -33,7 +33,7 @@ class IShaderValidator;
 // Pipeline descriptor
 
 /**
- * @brief Describes a complete pipeline build job — all stages and targets.
+ * @brief Describes a complete pipeline build job - all stages and targets.
  */
 struct PipelineBuildDesc {
     std::string name;
@@ -67,14 +67,14 @@ struct PipelineBuildResult {
 
 /**
  * @brief Drives the full offline compilation sequence:
- *        source → SPIR-V → validate → reflect → cross-compile → @ref ShaderArtifact.
+ *        source -> SPIR-V -> validate -> reflect -> cross-compile -> @ref ShaderArtifact.
  *
  * The pipeline is:
- *  -# Cache lookup — return early on hit.
- *  -# @ref IShaderFrontEnd::compile      — source → SPIR-V.
- *  -# @ref IShaderValidator::validate    — optional SPIR-V validation.
- *  -# @ref IShaderReflector::reflect — SPIR-V → typed @ref StageReflection.
- *  -# @ref IShaderCrossCompiler::crossCompile — SPIR-V → target source (one per target).
+ *  -# Cache lookup - return early on hit.
+ *  -# @ref IShaderFrontEnd::compile     - source -> SPIR-V.
+ *  -# @ref IShaderValidator::validate   - optional SPIR-V validation.
+ *  -# @ref IShaderReflector::reflect - SPIR-V -> typed @ref StageReflection.
+ *  -# @ref IShaderCrossCompiler::crossCompile - SPIR-V -> target source (one per target).
  *  -# Cache store.
  */
 class IShaderPipelineBuilder {

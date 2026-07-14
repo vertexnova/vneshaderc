@@ -8,14 +8,14 @@
 # Autodoc:   yes
 #==============================================================================
 
-# VnescShaders.cmake — CMake helper for build-time shader bundle compilation
+# VnescShaders.cmake - CMake helper for build-time shader bundle compilation
 #
 # Usage:
 #   include(VnescShaders)
 #
 #   vne_compile_shaders(<target>
 #       OUTPUT_DIR  <dir>        # Where .vneshader directories are written
-#       MANIFESTS   <m1> <m2>…  # Paths to .manifest.json files
+#       MANIFESTS   <m1> <m2>...  # Paths to .manifest.json files
 #       [CACHE_DIR  <dir>]       # Optional artifact cache directory
 #   )
 #

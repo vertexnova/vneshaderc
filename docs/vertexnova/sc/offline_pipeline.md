@@ -4,8 +4,8 @@
 
 | CMake option | Default | Purpose |
 |--------------|---------|---------|
-| `VNE_SC_GLSLANG` | ON | GLSL → SPIR-V (glslang) |
-| `VNE_SC_TINT` | OFF | SPIR-V → WGSL (Dawn Tint; slow first configure) |
+| `VNE_SC_GLSLANG` | ON | GLSL -> SPIR-V (glslang) |
+| `VNE_SC_TINT` | OFF | SPIR-V -> WGSL (Dawn Tint; slow first configure) |
 | `VNE_SC_JSON` | ON | `manifest.json` + pipeline build JSON |
 | `VNE_SC_SPIRVTOOLS` | OFF | SPIR-V validation |
 

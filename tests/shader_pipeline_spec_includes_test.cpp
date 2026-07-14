@@ -21,7 +21,7 @@ namespace vne::sc::test {
 
 class ShaderPipelineSpecIncludesTest : public GlslangFrontEndTestFixture {};
 
-// include_paths → toBuildDesc wiring
+// include_paths -> toBuildDesc wiring
 
 TEST_F(ShaderPipelineSpecIncludesTest, IncludePathsResolvedRelativeToSpecDir) {
 #ifndef VNE_SC_JSON_ENABLED

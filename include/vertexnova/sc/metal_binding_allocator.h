@@ -16,7 +16,7 @@
  * @ingroup vne::sc
  *
  * @par Why this exists
- * Metal's index spaces are small and fixed — **31 buffers**, **16 samplers** — while Vulkan's
+ * Metal's index spaces are small and fixed - **31 buffers**, **16 samplers** - while Vulkan's
  * `(set, binding)` space is effectively unbounded. The previous mapping *flattened* the two:
  *
  *     msl_buffer = buffer_base + set * flatten_stride + binding      // base 16, stride 32
@@ -57,7 +57,7 @@ struct MetalIndexLimits {
 };
 
 /**
- * @brief Dense, deterministic `(set, binding)` → Metal index assignment.
+ * @brief Dense, deterministic `(set, binding)` -> Metal index assignment.
  *
  * Prefer @ref fromProgram for multi-stage pipelines so all stages share one map. Stage-local
  * construction from a single @c Compiler remains available for unit tests / legacy paths.

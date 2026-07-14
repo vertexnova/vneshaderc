@@ -8,7 +8,7 @@
 # Autodoc:   yes
 #==============================================================================
 
-# 02_triangle_bundle — file-based GLSL → MSL bundle + reflection dump
+# 02_triangle_bundle - file-based GLSL -> MSL bundle + reflection dump
 
 #==============================================================================
 #                              Build Executable                                #
