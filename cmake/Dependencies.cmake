@@ -2,6 +2,12 @@
 # Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Autodoc:   yes
+#==============================================================================
+
 # cmake/Dependencies.cmake
 # External dependencies for vnesc via pure FetchContent.
 #
@@ -13,7 +19,6 @@
 #   -DVNE_SC_JSON_DIR=/path/to/nlohmann_json
 #
 # All KhronosGroup deps are pinned to vulkan-sdk-1.3.296.0.
-#==============================================================================
 
 include(FetchContent)
 
@@ -23,9 +28,12 @@ set(_vne_sc_sdk_tag "vulkan-sdk-1.3.296.0")
 set(_vne_sc_prev_pic "${CMAKE_POSITION_INDEPENDENT_CODE}")
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Helper: map VNE_SC_<DEP>_DIR to FETCHCONTENT_SOURCE_DIR_<DEP>
-# FetchContent skips the network entirely when FETCHCONTENT_SOURCE_DIR_<upper>
-# is set, making it equivalent to the old vendored-submodule path.
+#==============================================================================
+#                         FetchContent Path Overrides                          #
+#==============================================================================
+
+# Map VNE_SC_<DEP>_DIR → FETCHCONTENT_SOURCE_DIR_<DEP>.
+# FetchContent skips the network when FETCHCONTENT_SOURCE_DIR_<upper> is set.
 macro(_vne_sc_apply_override _fc_name _cache_var)
     if(DEFINED ${_cache_var} AND NOT "${${_cache_var}}" STREQUAL "")
         if(EXISTS "${${_cache_var}}/CMakeLists.txt")
@@ -39,7 +47,11 @@ macro(_vne_sc_apply_override _fc_name _cache_var)
     endif()
 endmacro()
 
-# SPIRV-Cross — always required (cross-compilation + reflection)
+#==============================================================================
+#                                 SPIRV-Cross                                  #
+#==============================================================================
+
+# Always required (cross-compilation + reflection).
 set(SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_TESTS             OFF CACHE BOOL "" FORCE)
 set(SPIRV_CROSS_ENABLE_GLSL              ON  CACHE BOOL "" FORCE)
@@ -75,7 +87,10 @@ foreach(_t spirv-cross-core spirv-cross-glsl spirv-cross-msl)
 endforeach()
 message(STATUS "[vnesc] SPIRV-Cross → ${_vne_sc_spirvcross_src}")
 
-# glslang + SPIRV-Headers  (when VNE_SC_GLSLANG=ON)
+#==============================================================================
+#                          glslang + SPIRV-Headers                             #
+#==============================================================================
+
 if(VNE_SC_GLSLANG)
     # SPIRV-Headers must be available before glslang configures.
     set(SPIRV_HEADERS_SKIP_INSTALL ON CACHE BOOL "" FORCE)
@@ -118,7 +133,10 @@ if(VNE_SC_GLSLANG)
     message(STATUS "[vnesc] glslang → ${_vne_sc_glslang_src}")
 endif()
 
-# SPIRV-Tools  (when VNE_SC_SPIRVTOOLS=ON)
+#==============================================================================
+#                                 SPIRV-Tools                                  #
+#==============================================================================
+
 if(VNE_SC_SPIRVTOOLS)
     set(SPIRV_SKIP_EXECUTABLES   ON  CACHE BOOL "" FORCE)
     set(SPIRV_SKIP_TESTS         ON  CACHE BOOL "" FORCE)
@@ -142,7 +160,10 @@ if(VNE_SC_SPIRVTOOLS)
     message(STATUS "[vnesc] SPIRV-Tools → ${_vne_sc_spirvtools_src}")
 endif()
 
-# nlohmann/json  (when VNE_SC_JSON=ON)
+#==============================================================================
+#                               nlohmann/json                                  #
+#==============================================================================
+
 if(VNE_SC_JSON)
     set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
     set(JSON_Install    OFF CACHE BOOL "" FORCE)
@@ -156,6 +177,10 @@ if(VNE_SC_JSON)
     FetchContent_GetProperties(nlohmann_json SOURCE_DIR _vne_sc_json_src)
     message(STATUS "[vnesc] nlohmann/json → ${_vne_sc_json_src}")
 endif()
+
+#==============================================================================
+#                          Dawn / Tint Apple Workarounds                       #
+#==============================================================================
 
 # Fix abseil-cpp PR #1710 on Apple: CMAKE deduplicates -Xarch_* compile options,
 # so x86-only flags like -msse4.1 leak into arm64 builds. Patch targets only
@@ -194,7 +219,11 @@ function(_vne_sc_fix_dawn_abseil_randen_copts)
     endif()
 endfunction()
 
-# Dawn / Tint  (when VNE_SC_TINT=ON)  — FetchContent only, no submodule
+#==============================================================================
+#                              Dawn / Tint (optional)                          #
+#==============================================================================
+
+# FetchContent only — no submodule. When VNE_SC_TINT=ON.
 if(VNE_SC_TINT)
     set(DAWN_BUILD_SAMPLES           OFF CACHE BOOL "" FORCE)
     # Dawn can either bootstrap dependencies via Chromium's depot_tools/gclient
@@ -244,7 +273,10 @@ if(VNE_SC_TINT)
     message(STATUS "[vnesc] Dawn/Tint → FetchContent chromium/6723 (Release build)")
 endif()
 
-# Helper functions consumed by src/CMakeLists.txt
+#==============================================================================
+#                         Link Helpers (for src/CMakeLists)                    #
+#==============================================================================
+
 function(vne_sc_link_spirvcross target)
     if(NOT VNE_SC_SPIRV_CROSS_INCLUDE_DIR OR
        NOT EXISTS "${VNE_SC_SPIRV_CROSS_INCLUDE_DIR}/spirv_cross.hpp")
@@ -274,7 +306,10 @@ function(vne_sc_link_tint target)
     target_compile_definitions(${target} PRIVATE VNE_SC_TINT_ENABLED)
 endfunction()
 
-# Restore PIC state.
+#==============================================================================
+#                               Restore PIC State                              #
+#==============================================================================
+
 if(DEFINED _vne_sc_prev_pic AND NOT _vne_sc_prev_pic STREQUAL "")
     set(CMAKE_POSITION_INDEPENDENT_CODE "${_vne_sc_prev_pic}")
 else()

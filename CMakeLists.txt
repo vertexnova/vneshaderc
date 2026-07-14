@@ -42,8 +42,10 @@ include(ProjectSetup)
 include(CompilerOptions)
 
 #==============================================================================
-# Internal Libraries (deps/internal) - use if already in build, else add
+#                           Internal Libraries                                 #
 #==============================================================================
+
+# Use deps/internal if already in the build, otherwise add_subdirectory via VneUseDep.
 include(VneUseDep)
 
 function(_vnesc_configure_vnecommon_dep)
@@ -87,27 +89,30 @@ function(_vnesc_configure_vnelogging_dep)
 endfunction()
 _vnesc_configure_vnelogging_dep()
 
-# Include dirs and config
+#==============================================================================
+#                         Include Dirs and config.h                            #
+#==============================================================================
+
 set(VNE_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(VNE_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 configure_file(${PROJECT_SOURCE_DIR}/configs/config.h.in ${CMAKE_BINARY_DIR}/config.h)
 include_directories(${CMAKE_BINARY_DIR})
 
 #==============================================================================
-# Build Options
+#                                Build Options                                 #
 #==============================================================================
+
 # Option naming and deps:
-# - Use VNE_TEMPLATE_* for vnetemplate-only options so there is no conflict when
-#   this project is used as a submodule (parent can set VNE_TEMPLATE_TESTS=OFF
-#   without affecting BUILD_TESTS used by other deps).
+# - Use VNE_SC_* for vnesc-only options so there is no conflict when this project
+#   is used as a submodule (parent can set VNE_SC_TESTS=OFF without affecting
+#   BUILD_TESTS used by other deps).
 # - BUILD_TESTS / BUILD_EXAMPLES are global; we force them (via VneUseDep
 #   CACHE_VARS) before add_subdirectory for each dep so deps do not build their
 #   own tests/examples when used as internal libs. We restore after each dep.
 # - ENABLE_COVERAGE, ENABLE_DOXYGEN, WARNINGS_AS_ERRORS are global: if multiple
 #   libs in deps/internal define the same option name, the first to run wins the
-#   default; -D from the command line applies to all. No duplicate option()
-#   definition (CMake uses cache), but behavior is "one value for the whole tree."
-#==============================================================================
+#   default; -D from the command line applies to all.
+
 if(CMAKE_PROJECT_NAME STREQUAL "vnesc")
     set(VNE_SC_DEV_DEFAULT ON)
 else()
@@ -124,7 +129,10 @@ option(VNE_SC_TESTS    "Build vnesc test suite (turn OFF when used as submodule)
 option(VNE_SC_EXAMPLES "Build vnesc example programs (turn OFF when used as submodule)" OFF)
 option(VNE_SC_TOOLS    "Build vnesc CLI tools (e.g. vnesc_shader_compiler)" ON)
 
-# Shader compiler backend options
+#==============================================================================
+#                         Shader Compiler Backends                             #
+#==============================================================================
+
 option(VNE_SC_GLSLANG    "Enable glslang GLSL→SPIR-V front-end (Phase 1, primary)" ON)
 option(VNE_SC_DXC        "Enable DXC HLSL→SPIR-V front-end (Phase 2 — stub only)" OFF)
 option(VNE_SC_SLANG      "Enable Slang front-end (Phase 3 — stub only)" OFF)
@@ -137,10 +145,8 @@ option(ENABLE_COVERAGE "Enable code coverage reporting" OFF)
 option(ENABLE_ASAN "Enable AddressSanitizer + UndefinedBehaviorSanitizer (Clang/GCC, Linux/macOS only)" OFF)
 option(WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
-#==============================================================================
-# Incompatible options: coverage and ASan/UBSan must not both be enabled
-# (--coverage + -fsanitize=... together produce noisy/incorrect results).
-#==============================================================================
+# Coverage and ASan/UBSan must not both be enabled (--coverage + -fsanitize
+# together produce noisy/incorrect results).
 if(ENABLE_COVERAGE AND ENABLE_ASAN)
     message(FATAL_ERROR
         "ENABLE_COVERAGE and ENABLE_ASAN cannot both be ON. "
@@ -161,7 +167,7 @@ elseif(VNE_SC_DEV)
 endif()
 
 #==============================================================================
-# Compiler Warnings
+#                              Compiler Warnings                               #
 #==============================================================================
 add_library(VnescWarnings INTERFACE)
 include(ProjectWarnings)
@@ -169,7 +175,7 @@ set_project_warnings(VnescWarnings)
 add_library(vne::sc::Warnings ALIAS VnescWarnings)
 
 #==============================================================================
-# Build Settings Interface Library
+#                       Build Settings Interface Library                       #
 #==============================================================================
 add_library(VnescBuildSettings INTERFACE)
 target_compile_features(VnescBuildSettings INTERFACE cxx_std_20)
@@ -201,16 +207,20 @@ elseif(VNE_TARGET_PLATFORM STREQUAL "Web")
     target_compile_definitions(VnescBuildSettings INTERFACE VNE_PLATFORM_WEB)
 endif()
 
-# External shader compiler dependencies (FetchContent)
+#==============================================================================
+#                     External Dependencies (FetchContent)                     #
+#==============================================================================
+
 include(Dependencies)
 
 #==============================================================================
-# Add Library
+#                                  Library                                     #
 #==============================================================================
+
 add_subdirectory(src)
 
 #==============================================================================
-# Tests
+#                                    Tests                                     #
 #==============================================================================
 if(VNE_SC_TESTS)
     enable_testing()
@@ -218,21 +228,21 @@ if(VNE_SC_TESTS)
 endif()
 
 #==============================================================================
-# Examples
+#                                   Examples                                   #
 #==============================================================================
 if(VNE_SC_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 #==============================================================================
-# Tools
+#                                    Tools                                     #
 #==============================================================================
 if(VNE_SC_TOOLS)
     add_subdirectory(tools/shader_compiler_cli)
 endif()
 
 #==============================================================================
-# Documentation
+#                                Documentation                                 #
 #==============================================================================
 if(ENABLE_DOXYGEN)
     find_package(Doxygen QUIET OPTIONAL_COMPONENTS dot)
@@ -254,7 +264,7 @@ if(ENABLE_DOXYGEN)
 endif()
 
 #==============================================================================
-# CPack (ZIP/TGZ release archives)
+#                       CPack (ZIP/TGZ release archives)                       #
 #==============================================================================
 set(CPACK_PACKAGE_NAME         "vnesc")
 set(CPACK_PACKAGE_VERSION      "${PROJECT_VERSION}")
@@ -266,6 +276,6 @@ set(CPACK_COMPONENT_VNESC_TOOLS_DISPLAY_NAME "vnesc CLI tools")
 include(CPack)
 
 #==============================================================================
-# Installation
+#                                 Installation                                 #
 #==============================================================================
 include(InstallRules)

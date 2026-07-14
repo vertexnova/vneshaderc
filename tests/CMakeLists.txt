@@ -2,14 +2,23 @@
 # Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
-# vnesc test suite — one translation unit per class under test (ClassNameTest).
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Autodoc:   yes
 #==============================================================================
+
+# vnesc unit tests (GoogleTest)
+# One translation unit per class under test (ClassNameTest fixtures).
 
 if(NOT TARGET vnesc)
     return()
 endif()
 
-# Google Test
+#==============================================================================
+#                              Google Test Setup                               #
+#==============================================================================
+
 # Always build from source via FetchContent to guarantee static linkage.
 message(STATUS "vnesc tests: fetching googletest v1.17.0")
 include(FetchContent)
@@ -23,6 +32,12 @@ FetchContent_Declare(googletest
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(googletest)
 set(GTEST_LIBS gtest gmock)
+
+include(GoogleTest)
+
+#==============================================================================
+#                              Build Executable                                #
+#==============================================================================
 
 set(VNESC_TEST_SOURCES
     main.cpp
@@ -53,6 +68,11 @@ add_executable(vnesc_tests ${VNESC_TEST_SOURCES})
 target_include_directories(vnesc_tests PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/src)
+
+#==============================================================================
+#                                Dependencies                                  #
+#==============================================================================
+
 target_link_libraries(vnesc_tests PRIVATE
     ${GTEST_LIBS}
     vnesc)
@@ -68,5 +88,8 @@ if(VNE_SC_JSON)
     target_compile_definitions(vnesc_tests PRIVATE VNE_SC_JSON_ENABLED)
 endif()
 
-include(GoogleTest)
+#==============================================================================
+#                               Test Discovery                                 #
+#==============================================================================
+
 gtest_discover_tests(vnesc_tests)

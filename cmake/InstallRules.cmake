@@ -2,12 +2,21 @@
 # Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Autodoc:   yes
+#==============================================================================
+
 # cmake/InstallRules.cmake
 # Install rules for vnesc library targets and public headers.
 # Included from the bottom of the top-level CMakeLists.txt.
-#==============================================================================
 
 include(GNUInstallDirs)
+
+#==============================================================================
+#                              Library Targets                                 #
+#==============================================================================
 
 set(_vnesc_install_targets
     vnesc
@@ -31,19 +40,25 @@ install(TARGETS ${_vnesc_install_targets}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     COMPONENT vnesc)
 
+#==============================================================================
+#                              Public Headers                                  #
+#==============================================================================
+
 install(DIRECTORY include/vertexnova/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/vertexnova
     COMPONENT vnesc
     FILES_MATCHING PATTERN "*.h")
 
-# CLI tool
+#==============================================================================
+#                                 CLI Tools                                    #
+#==============================================================================
+
 if(VNE_SC_TOOLS AND TARGET vnesc_shader_compiler)
     install(TARGETS vnesc_shader_compiler
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         COMPONENT vnesc_tools)
 endif()
 
-# Python batch wrapper
 if(VNE_SC_TOOLS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tools/compile_shaders.py")
     install(PROGRAMS "${CMAKE_CURRENT_SOURCE_DIR}/tools/compile_shaders.py"
         DESTINATION ${CMAKE_INSTALL_BINDIR}
