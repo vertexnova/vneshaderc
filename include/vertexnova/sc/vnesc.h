@@ -12,12 +12,13 @@
 
 /**
  * @file vnesc.h
- * @brief Umbrella header — includes the complete vnesc public API.
+ * @brief Umbrella header - includes the complete vnesc public API.
  * For most use cases, including this single file is sufficient.
  */
 
 #include "sc_types.h"
 #include "sc_result.h"
+#include "metal_binding_allocator.h"
 #include "shader_artifact.h"
 #include "shader_frontend.h"
 #include "shader_cross_compiler.h"

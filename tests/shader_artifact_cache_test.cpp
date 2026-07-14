@@ -78,6 +78,31 @@ TEST_F(ShaderArtifactCacheTest, MetalLayoutIgnoredWhenMslNotAmongTargets) {
     EXPECT_EQ(ShaderArtifactCache::makeKey(req, targets, defaults), ShaderArtifactCache::makeKey(req, targets, custom));
 }
 
+TEST_F(ShaderArtifactCacheTest, DifferentMetalProgramFingerprintProducesDifferentKey) {
+    CompileRequest req;
+    req.source = "void main() {}";
+    std::vector<CrossTarget> targets = {CrossTarget::eMSL};
+    MetalBindingLayout layout;
+    EXPECT_NE(ShaderArtifactCache::makeKey(req, targets, layout, 0x1111ULL),
+              ShaderArtifactCache::makeKey(req, targets, layout, 0x2222ULL));
+    EXPECT_EQ(ShaderArtifactCache::makeKey(req, targets, layout, 0xABCDULL),
+              ShaderArtifactCache::makeKey(req, targets, layout, 0xABCDULL));
+}
+
+TEST_F(ShaderArtifactCacheTest, MakeProgramFingerprintIsSourceLevelAndDeterministic) {
+    CompileRequest a;
+    a.source = "void main() { int x = 1; }";
+    a.stage = ShaderStage::eVertex;
+    CompileRequest b = a;
+    b.source = "void main() { int x = 2; }";
+    MetalBindingLayout layout;
+
+    EXPECT_EQ(ShaderArtifactCache::makeProgramFingerprint({a}, layout),
+              ShaderArtifactCache::makeProgramFingerprint({a}, layout));
+    EXPECT_NE(ShaderArtifactCache::makeProgramFingerprint({a}, layout),
+              ShaderArtifactCache::makeProgramFingerprint({b}, layout));
+}
+
 TEST_F(ShaderArtifactCacheTest, StoreAndLookupRoundTrip) {
     namespace fs = std::filesystem;
     auto tmp = makeUniqueTempPath("vnesc_shader_artifact_cache_roundtrip");

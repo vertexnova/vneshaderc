@@ -266,7 +266,7 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
             // Canonical Vulkan set/binding
             jb["vulkan"] = {{"set", b.set}, {"binding", b.binding}};
 
-            // Type-aware Metal slot — only emit fields meaningful for this resource type
+            // Type-aware Metal slot - only emit fields meaningful for this resource type
             if (b.slots.metal) {
                 nlohmann::json jm;
                 switch (b.type) {
@@ -293,12 +293,12 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                     jb["metal"] = std::move(jm);
             }
 
-            // WebGPU slot — only present when WGSL was a compilation target
+            // WebGPU slot - only present when WGSL was a compilation target
             if (b.slots.webgpu) {
                 jb["webgpu"] = {{"group", b.slots.webgpu->group}, {"binding", b.slots.webgpu->binding}};
             }
 
-            // Struct members for buffer types — omit noise fields when at defaults
+            // Struct members for buffer types - omit noise fields when at defaults
             if (!b.struct_members.empty()) {
                 nlohmann::json jmembers = nlohmann::json::array();
                 for (const auto& m : b.struct_members) {

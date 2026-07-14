@@ -136,7 +136,7 @@ jobs:
         if: runner.os == 'Linux' && inputs.enable_coverage
         run: sudo apt-get install -y lcov
 
-      # Coverage builds must start clean — cached Release objects lack
+      # Coverage builds must start clean - cached Release objects lack
       # --coverage instrumentation and CMake will not recompile them.
       - name: Clean build directory (coverage only)
         if: inputs.enable_coverage
@@ -144,7 +144,7 @@ jobs:
         run: rm -rf ${{ env.BUILD_DIR }}
 
       # ------------------------------------------------------------------
-      # Configure — use EFFECTIVE_BUILD_TYPE from previous step (single source of truth).
+      # Configure - use EFFECTIVE_BUILD_TYPE from previous step (single source of truth).
       # ------------------------------------------------------------------
       - name: Configure CMake
         shell: bash
@@ -165,22 +165,14 @@ jobs:
             COMPILER_FLAGS="-DCMAKE_C_COMPILER=$C_COMPILER -DCMAKE_CXX_COMPILER=$CPP_COMPILER"
           fi
 
-          # Use validated CACHE_LIB_TYPE from previous step (empty/shared/static only).
-          LIB_TYPE_FLAGS=""
-          if [[ "$CACHE_LIB_TYPE" == "static" ]]; then
-            LIB_TYPE_FLAGS="-DVNE_TEMPLATE_LIB_TYPE=static"
-          else
-            LIB_TYPE_FLAGS="-DVNE_TEMPLATE_LIB_TYPE=shared"
-          fi
-
           # shellcheck disable=SC2086  # intentional word-splitting for flag vars
+          # vnesc builds static archives; CACHE_LIB_TYPE only selects the build/ dir name.
           cmake -B "$BUILD_DIR" -S . \
             -DCMAKE_BUILD_TYPE="$EFFECTIVE_BUILD_TYPE" \
-            -DVNE_TEMPLATE_CI=ON \
+            -DVNE_SC_CI=ON \
             -DWARNINGS_AS_ERRORS="$WAE" \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             ${COVERAGE_FLAG} \
-            ${LIB_TYPE_FLAGS} \
             ${COMPILER_FLAGS} \
             ${EXTRA_FLAGS}
 
@@ -198,12 +190,12 @@ jobs:
           GCNO_COUNT=$(find "$BUILD_DIR" -name "*.gcno" 2>/dev/null | wc -l)
           echo "Total .gcno files: $GCNO_COUNT"
           if [[ "$GCNO_COUNT" -eq 0 ]]; then
-            echo "::error::No .gcno files found — binary was not compiled with --coverage. Check ENABLE_COVERAGE and build type."
+            echo "::error::No .gcno files found - binary was not compiled with --coverage. Check ENABLE_COVERAGE and build type."
             exit 1
           fi
 
       # ------------------------------------------------------------------
-      # Test — JUnit XML output for inline PR annotations
+      # Test - JUnit XML output for inline PR annotations
       # Note: --output-junit requires CMake 3.21+; ubuntu-latest ships 3.22+
       # ------------------------------------------------------------------
       - name: Test
@@ -224,7 +216,7 @@ jobs:
           GCDA_COUNT=$(find "$BUILD_DIR" -name "*.gcda" 2>/dev/null | wc -l)
           echo "Total .gcda files: $GCDA_COUNT"
           if [[ "$GCDA_COUNT" -eq 0 ]]; then
-            echo "::error::No .gcda files found after running tests — tests may not have executed or binary not linked with --coverage."
+            echo "::error::No .gcda files found after running tests - tests may not have executed or binary not linked with --coverage."
             exit 1
           fi
 

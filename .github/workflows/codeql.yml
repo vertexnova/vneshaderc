@@ -68,8 +68,7 @@ jobs:
         run: |
           cmake -B build/static -S . \
             -DCMAKE_BUILD_TYPE=Release \
-            -DVNE_TEMPLATE_CI=ON \
-            -DVNE_TEMPLATE_LIB_TYPE=static \
+            -DVNE_SC_CI=ON \
             -DWARNINGS_AS_ERRORS=OFF
           cmake --build build/static --config Release --parallel
 

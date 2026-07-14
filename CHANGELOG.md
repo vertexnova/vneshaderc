@@ -83,7 +83,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Bug Fixes
 
 * fixing CI skipping issue while merging to main ([#15](https://github.com/vertexnova/vnetemplate/issues/15)) ([4f60e3e](https://github.com/vertexnova/vnetemplate/commit/4f60e3eec70bc6b2b9b926887c9ec3d447a6b394))
-* improve auto-merge handling for Release PRs to support special c… ([#17](https://github.com/vertexnova/vnetemplate/issues/17)) ([6c08f5d](https://github.com/vertexnova/vnetemplate/commit/6c08f5d92d205bc13beceb529342bec24fb4ac45))
+* improve auto-merge handling for Release PRs to support special c... ([#17](https://github.com/vertexnova/vnetemplate/issues/17)) ([6c08f5d](https://github.com/vertexnova/vnetemplate/commit/6c08f5d92d205bc13beceb529342bec24fb4ac45))
 
 ## [0.1.1](https://github.com/vertexnova/vnetemplate/compare/v0.1.0...v0.1.1) (2026-02-20)
 

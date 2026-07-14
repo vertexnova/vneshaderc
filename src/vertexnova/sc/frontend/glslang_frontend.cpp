@@ -89,7 +89,7 @@ bool readBinaryFile(std::ifstream& file, std::string& out) {
     return file.gcount() == size;
 }
 
-// ── Stage mapping ─────────────────────────────────────────────────────────────
+// Stage mapping
 EShLanguage toEshLang(vne::sc::ShaderStage stage) {
     switch (stage) {
         case vne::sc::ShaderStage::eVertex:
@@ -108,7 +108,7 @@ EShLanguage toEshLang(vne::sc::ShaderStage stage) {
     return EShLangVertex;
 }
 
-// ── #include resolver ─────────────────────────────────────────────────────────
+// #include resolver
 class FileIncluder : public glslang::TShader::Includer {
    public:
     explicit FileIncluder(const std::vector<std::string>& include_dirs)
@@ -165,7 +165,7 @@ class FileIncluder : public glslang::TShader::Includer {
     }
 };
 
-// ── Macro preamble ────────────────────────────────────────────────────────────
+// Macro preamble
 std::string buildPreamble(const std::vector<vne::sc::ShaderMacro>& macros) {
     std::string preamble;
     for (const auto& m : macros) {
@@ -212,7 +212,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
         return result;
     }
 
-    // ── Resolve source text ────────────────────────────────────────────────────
+    // Resolve source text
     std::string source;
     std::string source_path;
 
@@ -238,7 +238,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
         return result;
     }
 
-    // ── Build TShader ──────────────────────────────────────────────────────────
+    // Build TShader
     EShLanguage esh_lang = toEshLang(req.stage);
     glslang::TShader shader(esh_lang);
 
@@ -289,7 +289,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
         return result;
     }
 
-    // ── Link ───────────────────────────────────────────────────────────────────
+    // Link
     glslang::TProgram program;
     program.addShader(&shader);
     if (!program.link(messages)) {
@@ -300,7 +300,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
         return result;
     }
 
-    // ── SPIR-V generation ──────────────────────────────────────────────────────
+    // SPIR-V generation
     glslang::SpvOptions spv_opts;
     spv_opts.generateDebugInfo = req.debug_info;
     spv_opts.disableOptimizer = (req.opt_level == OptLevel::eNone);
@@ -321,7 +321,7 @@ CompileResult GlslangFrontEnd::compile(const CompileRequest& req) {
     }
 
     result.code = result.warnings.empty() ? ResultCode::eSuccess : ResultCode::eCompileWarnings;
-    VNE_LOG_DEBUG << "GlslangFrontEnd: compiled " << source_path << " → " << result.spirv.size() << " SPIR-V words";
+    VNE_LOG_DEBUG << "GlslangFrontEnd: compiled " << source_path << " -> " << result.spirv.size() << " SPIR-V words";
     return result;
 }
 

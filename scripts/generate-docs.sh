@@ -40,7 +40,7 @@ check_prerequisites() {
     fi
 
     if ! command -v doxygen &> /dev/null; then
-        log_warning "Doxygen not found — API docs will be skipped."
+        log_warning "Doxygen not found - API docs will be skipped."
         DOXYGEN_AVAILABLE=false
     else
         DOXYGEN_AVAILABLE=true

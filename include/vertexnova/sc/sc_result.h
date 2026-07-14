@@ -23,9 +23,7 @@
 
 namespace vne::sc {
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Result code
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Status code returned by every compiler pipeline operation.
@@ -37,7 +35,7 @@ enum class ResultCode : int32_t {
     eSuccess = 0,              ///< Operation completed without errors.
     eCompileWarnings = 1,      ///< Compilation succeeded but generated warnings.
     eCompileFailed = -1,       ///< Source code could not be compiled.
-    eCrossCompileFailed = -2,  ///< SPIR-V → target cross-compilation failed.
+    eCrossCompileFailed = -2,  ///< SPIR-V -> target cross-compilation failed.
     eReflectionFailed = -3,    ///< SPIR-V reflection could not be completed.
     eValidationFailed = -4,    ///< SPIR-V validation failed.
     eFileNotFound = -5,        ///< Source file does not exist.
@@ -51,9 +49,7 @@ inline bool succeeded(ResultCode code) noexcept {
     return static_cast<int32_t>(code) >= 0;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Result structs
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Result of a source-to-SPIR-V compilation.
 struct CompileResult {
@@ -73,10 +69,10 @@ struct WgpuBindingRemap {
     uint32_t binding = 0;  ///< Actual `@binding(N)` in the emitted WGSL.
 };
 
-/// Result of a SPIR-V → shading-language cross-compilation.
+/// Result of a SPIR-V -> shading-language cross-compilation.
 struct CrossCompileResult {
     ResultCode code = ResultCode::eCrossCompileFailed;
-    std::string source;       ///< Cross-compiled source text (MSL, GLSL, …).
+    std::string source;       ///< Cross-compiled source text (MSL, GLSL, ...).
     std::string entry_point;  ///< Actual entry-point name in the output source.
     std::string error;
     /// For WGSL targets: actual @group/@binding in emitted WGSL (may differ from SPIR-V set/binding).

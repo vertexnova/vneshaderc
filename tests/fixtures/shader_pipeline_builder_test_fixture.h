@@ -11,7 +11,7 @@
  */
 
 /**
- * @file fixtures/shader_pipeline_builder_test_fixture.h — helpers for ShaderPipelineBuilder tests.
+ * @file fixtures/shader_pipeline_builder_test_fixture.h - helpers for ShaderPipelineBuilder tests.
  */
 
 #include <filesystem>

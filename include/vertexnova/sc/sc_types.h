@@ -29,9 +29,7 @@ inline constexpr uint32_t kDefaultMslVersion = 30000u;
 inline constexpr uint32_t kMetalBindingFlattenStrideDefault = 32u;
 inline constexpr uint32_t kMetalBindingBufferBaseDefault = 16u;
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Shader stage
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Identifies a single programmable stage in the graphics or compute pipeline.
 enum class ShaderStage : uint8_t {
@@ -66,20 +64,16 @@ inline bool operator&(ShaderStageFlags a, ShaderStageFlags b) noexcept {
     return (static_cast<uint32_t>(a) & static_cast<uint32_t>(b)) != 0;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Front-end selection
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Selects the compiler front-end that translates source code to SPIR-V.
 enum class FrontEnd : uint8_t {
-    eGlslang = 0,  ///< glslang — vulkan's GLSL (4.5) to SPIR-V (active).
-    eDxc = 1,      ///< DXC    — HLSL to SPIR-V (stub).
-    eSlang = 2,    ///< Slang  — Slang to SPIR-V (stub).
+    eGlslang = 0,  ///< glslang - vulkan's GLSL (4.5) to SPIR-V (active).
+    eDxc = 1,      ///< DXC   - HLSL to SPIR-V (stub).
+    eSlang = 2,    ///< Slang - Slang to SPIR-V (stub).
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Cross-compilation target
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Shading-language target for SPIR-V cross-compilation.
 enum class CrossTarget : uint8_t {
@@ -90,9 +84,7 @@ enum class CrossTarget : uint8_t {
     eHLSL = 4,    ///< High-Level Shading Language.
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Source language
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Source language of the shader being compiled.
 enum class SourceLang : uint8_t {
@@ -103,20 +95,16 @@ enum class SourceLang : uint8_t {
     eSlang = 4,  ///< Slang.
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Optimisation level
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Controls SPIR-V optimisation during compilation.
 enum class OptLevel : uint8_t {
-    eNone = 0,         ///< No optimisation — fastest compile, largest output.
+    eNone = 0,         ///< No optimisation - fastest compile, largest output.
     eSize = 1,         ///< Minimise SPIR-V binary size.
     ePerformance = 2,  ///< Optimise for runtime performance (default).
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Compile request
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// A preprocessor macro injected into the shader source via a @c #define preamble.
 struct ShaderMacro {
@@ -141,7 +129,7 @@ struct CompileRequest {
     std::vector<std::string> include_dirs;        ///< Directories searched for @c #include.
     bool debug_info = false;                      ///< Embed debug information in SPIR-V.
     bool validate = true;                         ///< Validate SPIR-V after generation.
-    uint32_t glsl_version = kDefaultGlslVersion;  ///< GLSL version (e.g. 450 → @c #version 450).
+    uint32_t glsl_version = kDefaultGlslVersion;  ///< GLSL version (e.g. 450 -> @c #version 450).
 };
 
 /// Metal buffer-index layout configuration.
@@ -154,21 +142,28 @@ struct MetalBindingLayout {
 };
 
 /**
- * @brief Describes a single SPIR-V → target cross-compilation job.
+ * @brief Describes a single SPIR-V -> target cross-compilation job.
  */
 struct CrossCompileRequest {
     std::vector<uint32_t> spirv;  ///< Input SPIR-V binary.
     CrossTarget target = CrossTarget::eMSL;
     ShaderStage stage = ShaderStage::eVertex;
-    uint32_t msl_version = kDefaultMslVersion;  ///< MSL version (e.g. 30000 → Metal 3.0).
+    uint32_t msl_version = kDefaultMslVersion;  ///< MSL version (e.g. 30000 -> Metal 3.0).
     uint32_t glsl_version = kDefaultGlslVersion;
     bool fix_msl_fragment_signature = true;  ///< Align fragment stage_in with vertex output.
-    MetalBindingLayout metal_layout;         ///< MSL binding offsets (defaults match vnerhi).
+    MetalBindingLayout metal_layout;         ///< Legacy flatten params (buffer_base still used by dense alloc).
+    /**
+     * @brief Optional program-wide dense Metal map (non-owning).
+     *
+     * When non-null and @c target is MSL, bindings are taken from this map instead of the
+     * flatten formula. Owned by @ref ShaderPipelineBuilder for the duration of @c build()
+     * only - do not retain, copy for later use, or process the request asynchronously while
+     * this pointer is set; it is dangling after @c build() returns.
+     */
+    const class MetalBindingAllocator* metal_program_map = nullptr;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Reflection types
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// Metal binding indices derived from SPIRV-Cross automatic slot assignment.
 struct MetalResourceSlot {

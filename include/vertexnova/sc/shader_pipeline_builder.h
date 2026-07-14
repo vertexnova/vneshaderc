@@ -30,12 +30,10 @@ class IShaderCrossCompiler;
 class IShaderReflector;
 class IShaderValidator;
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Pipeline descriptor
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * @brief Describes a complete pipeline build job — all stages and targets.
+ * @brief Describes a complete pipeline build job - all stages and targets.
  */
 struct PipelineBuildDesc {
     std::string name;
@@ -45,6 +43,13 @@ struct PipelineBuildDesc {
     bool use_cache = true;               ///< Enable the file-based artifact cache.
     std::string cache_dir;               ///< Cache root directory; empty disables caching.
     MetalBindingLayout metal_layout;     ///< Propagated to cross-compiler and reflector.
+    /**
+     * @brief Temporary rollback switch for Metal program-wide dense slot maps.
+     *
+     * When true (default), MSL builds compute one shared @ref MetalBindingAllocator from the
+     * union of all stages. Set false to restore stage-local dense allocation (emergency only).
+     */
+    bool metal_dense_program_map = true;
 };
 
 /**
@@ -58,21 +63,20 @@ struct PipelineBuildResult {
     [[nodiscard]] bool ok() const noexcept { return succeeded(code); }
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Pipeline builder interface
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Drives the full offline compilation sequence:
- *        source → SPIR-V → validate → reflect → cross-compile → @ref ShaderArtifact.
+ *        source -> SPIR-V -> validate -> reflect -> cross-compile -> @ref ShaderArtifact.
  *
- * The pipeline is:
- *  -# Cache lookup — return early on hit.
- *  -# @ref IShaderFrontEnd::compile      — source → SPIR-V.
- *  -# @ref IShaderValidator::validate    — optional SPIR-V validation.
- *  -# @ref IShaderReflector::reflect — SPIR-V → typed @ref StageReflection.
- *  -# @ref IShaderCrossCompiler::crossCompile — SPIR-V → target source (one per target).
- *  -# Cache store.
+ * Per stage the pipeline is:
+ *  -# Cache lookup (key includes a source-level program fingerprint for MSL dense maps).
+ *  -# On miss: @ref IShaderFrontEnd::compile, optional validate, reflect, cross-compile, store.
+ *  -# On hit: reuse the cached @ref StageArtifact (no front-end compile).
+ *
+ * When any stage misses and MSL dense program maps are enabled, one shared
+ * @ref MetalBindingAllocator is built from the union of all stage SPIR-V
+ * (cached and freshly compiled) before reflect / cross-compile of the misses.
  */
 class IShaderPipelineBuilder {
    public:
@@ -84,9 +88,7 @@ class IShaderPipelineBuilder {
     virtual PipelineBuildResult build(const PipelineBuildDesc& desc) = 0;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 // Concrete implementation
-// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * @brief Default @ref IShaderPipelineBuilder returned by @ref ShaderCompilerFactory.

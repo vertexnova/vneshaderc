@@ -15,7 +15,7 @@
 
 namespace {
 
-constexpr uint32_t kReflectionBinaryVersion = 2u;  // bumped: BackendSlot → ResourceBackendSlots
+constexpr uint32_t kReflectionBinaryVersion = 2u;  // bumped: BackendSlot -> ResourceBackendSlots
 constexpr uint32_t kMaxStringLen = 4096;
 constexpr uint32_t kMaxProgramStageCount = 16;
 constexpr uint32_t kMaxBindingCount = 256;

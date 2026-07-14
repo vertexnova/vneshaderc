@@ -181,7 +181,7 @@ def main():
                 if p.is_dir():
                     source_files.extend(find_source_files(p))
             source_files = sorted(set(source_files))
-            print(f"Target: CI dirs — {len(source_files)} files")
+            print(f"Target: CI dirs - {len(source_files)} files")
         else:
             target_folder = (project_root / folder_arg).resolve()
             if not target_folder.is_dir():

@@ -23,6 +23,8 @@
 
 namespace vne::sc {
 
+class MetalBindingAllocator;
+
 /**
  * @brief Reflects a SPIR-V binary and returns typed binding metadata.
  *
@@ -38,12 +40,14 @@ class IShaderReflector {
      * @brief Reflects @p spirv and returns typed stage binding metadata.
      * @param spirv  SPIR-V binary words.
      * @param stage  Pipeline stage the module belongs to.
+     * @param metal_program_map Optional program-wide dense Metal slots (MSL only).
      * @returns A @ref ReflectResult whose @c reflection is populated on success.
      */
     virtual ReflectResult reflect(const std::vector<uint32_t>& spirv,
                                   ShaderStage stage,
                                   const std::vector<CrossTarget>& targets = {},
-                                  MetalBindingLayout metal_layout = {}) = 0;
+                                  MetalBindingLayout metal_layout = {},
+                                  const MetalBindingAllocator* metal_program_map = nullptr) = 0;
 };
 
 }  // namespace vne::sc

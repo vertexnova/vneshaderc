@@ -13,7 +13,7 @@
 /**
  * @file slang_frontend.h
  * @brief Slang front-end: compiles Slang source to SPIR-V.
- * @note SFI — stub implementation.  @ref isAvailable returns @c false and
+ * @note SFI - stub implementation.  @ref isAvailable returns @c false and
  */
 
 #include "vertexnova/sc/shader_frontend.h"
@@ -21,9 +21,9 @@
 namespace vne::sc {
 
 /**
- * @brief Slang → SPIR-V front-end using the Slang shader compiler.
+ * @brief Slang -> SPIR-V front-end using the Slang shader compiler.
  *
- * @note SFI — stub.  All methods are no-ops until the Slang back-end is implemented.
+ * @note SFI - stub.  All methods are no-ops until the Slang back-end is implemented.
  */
 class SlangFrontEnd final : public IShaderFrontEnd {
    public:

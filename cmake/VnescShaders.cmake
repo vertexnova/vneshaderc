@@ -2,14 +2,20 @@
 # Copyright (c) 2026 Ajeet Singh Yadav. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License")
 #
-# VnescShaders.cmake — CMake helper for build-time shader bundle compilation
+# Author:    Ajeet Singh Yadav
+# Created:   February 2026
+#
+# Autodoc:   yes
+#==============================================================================
+
+# VnescShaders.cmake - CMake helper for build-time shader bundle compilation
 #
 # Usage:
 #   include(VnescShaders)
 #
 #   vne_compile_shaders(<target>
 #       OUTPUT_DIR  <dir>        # Where .vneshader directories are written
-#       MANIFESTS   <m1> <m2>…  # Paths to .manifest.json files
+#       MANIFESTS   <m1> <m2>...  # Paths to .manifest.json files
 #       [CACHE_DIR  <dir>]       # Optional artifact cache directory
 #   )
 #
@@ -17,6 +23,9 @@
 # The bundle's bundle.header file is added as a source dependency so the
 # target rebuilds whenever a manifest or the vnesc_shader_compiler binary
 # changes.
+
+#==============================================================================
+#                            vne_compile_shaders()                             #
 #==============================================================================
 
 function(vne_compile_shaders TARGET)
@@ -56,7 +65,7 @@ function(vne_compile_shaders TARGET)
             VERBATIM
         )
 
-        # Add the stamp as a source so CMake tracks the dependency
+        # Add the stamp as a source so CMake tracks the dependency.
         target_sources("${TARGET}" PRIVATE "${stamp_file}")
     endforeach()
 endfunction()

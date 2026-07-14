@@ -9,10 +9,10 @@
 # When the Release PR is merged, publishes pre-built Release binary artifacts
 # for all supported platforms to the GitHub Release.
 # Two-tier release model:
-#   Tier 1 — source consumers: pin the release tag as a git submodule.
-#   Tier 2 — binary consumers: download .tar.gz from GitHub Releases.
+#   Tier 1 - source consumers: pin the release tag as a git submodule.
+#   Tier 2 - binary consumers: download .tar.gz from GitHub Releases.
 # Repo Settings required (one-time):
-#   Settings → General → Pull Requests → "Allow auto-merge" — ON
+#   Settings -> General -> Pull Requests -> "Allow auto-merge" - ON
 #   REPO_ACCESS_TOKEN (optional): use for higher limits; else github.token is used.
 #
 # Autodoc:   yes
@@ -53,7 +53,7 @@ jobs:
           token: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
 
       # Enable auto-merge so the Release PR merges once CI Gate passes. If the repo
-      # has not enabled "Allow auto-merge" (Settings → General, and Branches → main),
+      # has not enabled "Allow auto-merge" (Settings -> General, and Branches -> main),
       # we warn and leave the PR open for manual merge instead of failing the workflow.
       - name: Enable auto-merge on Release PR
         if: steps.rp.outputs.pr != ''
@@ -64,7 +64,7 @@ jobs:
           PR_NUMBER="$(echo "$PR_RAW" | python3 -c 'import sys,json; print(json.load(sys.stdin)["number"])')"
           if ! gh pr merge --repo "${{ github.repository }}" --auto --squash "$PR_NUMBER" 2>&1 | tee /tmp/gh-out; then
             if grep -q "enablePullRequestAutoMerge\|Auto merge is not allowed" /tmp/gh-out; then
-              echo "::warning::Auto-merge is disabled for this repo. Enable it under Settings → General → Pull Requests → 'Allow auto-merge'. Release PR #$PR_NUMBER remains open for manual merge."
+              echo "::warning::Auto-merge is disabled for this repo. Enable it under Settings -> General -> Pull Requests -> 'Allow auto-merge'. Release PR #$PR_NUMBER remains open for manual merge."
               exit 0
             fi
             exit 1
@@ -72,14 +72,14 @@ jobs:
 
   # --------------------------------------------------------------------
   # Stage 2: Build and publish artifacts (only when a release was created this run).
-  # Skipped on most pushes — release_created is true only when the Release PR
+  # Skipped on most pushes - release_created is true only when the Release PR
   # was merged in this run (release-please then creates the tag + GitHub Release).
   #
   # Produces 3 tarballs per release (Release build only):
-  #   vnetemplate-vX.Y.Z-{platform}.tar.gz
+  #   vnesc-vX.Y.Z-{platform}.tar.gz
   #
-  # Contents: one library per build in lib/ (static or shared via VNE_TEMPLATE_LIB_TYPE;
-  #           e.g. libvnetemplate.so or libvnetemplate.a on Unix), include/vertexnova/template/
+  # Contents: static libs under lib/ (libvnesc.a, libvnesc_spirvcross.a, ...),
+  #           include/vertexnova/sc/, and CLI tools under bin/ when built.
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
@@ -128,10 +128,12 @@ jobs:
           if [[ -n "${{ matrix.c }}" ]]; then
             COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
           fi
+          # shellcheck disable=SC2086
           cmake -B build/static -S . \
             -DCMAKE_BUILD_TYPE=Release \
-            -DVNE_TEMPLATE_CI=ON \
-            -DVNE_TEMPLATE_LIB_TYPE=static \
+            -DVNE_SC_TESTS=OFF \
+            -DVNE_SC_EXAMPLES=OFF \
+            -DVNE_SC_TOOLS=ON \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
             $COMPILER_FLAGS
 
@@ -141,16 +143,37 @@ jobs:
 
       - name: Install to staging directory
         shell: bash
-        run: cmake --install build/static --config Release --component vnetemplate
+        run: |
+          # Install library + headers (vnesc) and CLI tools (vnesc_tools).
+          cmake --install build/static --config Release --component vnesc
+          cmake --install build/static --config Release --component vnesc_tools
+
+      - name: Verify install layout
+        shell: bash
+        run: |
+          PREFIX="${{ github.workspace }}/install"
+          if [[ ! -d "$PREFIX/include/vertexnova/sc" ]]; then
+            echo "::error::Expected $PREFIX/include/vertexnova/sc missing after cmake --install."
+            ls -la "$PREFIX" || true
+            exit 1
+          fi
+          if [[ ! -d "$PREFIX/lib" ]] && [[ ! -d "$PREFIX/lib64" ]]; then
+            echo "::error::Expected lib/ or lib64/ under $PREFIX missing."
+            ls -laR "$PREFIX" || true
+            exit 1
+          fi
+          echo "Install layout OK:"
+          find "$PREFIX" -maxdepth 3 -type f | head -40
 
       - name: Package artifact
         shell: bash
         run: |
-          ARTIFACT="vnetemplate-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
+          ARTIFACT="vnesc-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
           # -C changes into the install dir so tar sees only its contents (no path prefix).
-          # The output path is relative to CWD (repo root) — avoids Windows drive-letter issues.
+          # The output path is relative to CWD (repo root) - avoids Windows drive-letter issues.
           tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
+          echo "Published: ${ARTIFACT}"
 
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2

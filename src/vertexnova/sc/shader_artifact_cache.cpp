@@ -24,7 +24,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.cache")
 
 namespace vne::sc {
 
-// ── FNV-1a 64-bit hash ────────────────────────────────────────────────────────
+// FNV-1a 64-bit hash
 namespace {
 
 constexpr uint64_t kFnv1a64Prime = 0x100000001b3ULL;
@@ -55,7 +55,7 @@ std::string toHex(uint64_t v) {
     return os.str();
 }
 
-// ── Binary I/O helpers ────────────────────────────────────────────────────────
+// Binary I/O helpers
 struct Writer {
     std::ostringstream os{std::ios::binary};
     void u8(uint8_t v) { os.write(reinterpret_cast<const char*>(&v), 1); }
@@ -91,7 +91,7 @@ struct Reader {
     [[nodiscard]] bool ok() const { return is.good() || is.eof(); }
 };
 
-// ── StageArtifact binary format ───────────────────────────────────────────────
+// StageArtifact binary format
 // stage(u8) | entry_point(str) | spirv_count(u32) | spirv_data |
 // StageReflection | cross_count(u32) | { target(u8) | source(str) | ep(str) } * N
 
@@ -147,7 +147,7 @@ bool deserializeArtifact(const std::string& data, StageArtifact& out) {
 
 }  // namespace
 
-// ── ShaderArtifactCache ───────────────────────────────────────────────────────
+// ShaderArtifactCache
 
 ShaderArtifactCache::ShaderArtifactCache(std::string cache_dir)
     : cache_dir_(std::move(cache_dir)) {
@@ -157,10 +157,9 @@ ShaderArtifactCache::ShaderArtifactCache(std::string cache_dir)
     }
 }
 
-std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
-                                         const std::vector<CrossTarget>& targets,
-                                         const MetalBindingLayout& metal_layout) {
-    uint64_t h = kFnv1a64Offset;
+namespace {
+
+void hashCompileRequest(uint64_t& h, const CompileRequest& req) noexcept {
     hashStr(h, req.source);
     hashStr(h, req.file_path);
     hashStr(h, req.entry_point);
@@ -176,6 +175,34 @@ std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
         hashStr(h, m.name);
         hashStr(h, m.value);
     }
+    for (const auto& dir : req.include_dirs) {
+        hashStr(h, dir);
+    }
+}
+
+}  // namespace
+
+std::uint64_t ShaderArtifactCache::makeProgramFingerprint(const std::vector<CompileRequest>& stages,
+                                                          const MetalBindingLayout& metal_layout) {
+    uint64_t h = kFnv1a64Offset;
+    h ^= static_cast<uint64_t>(stages.size());
+    h *= kFnv1a64Prime;
+    for (const auto& req : stages) {
+        hashCompileRequest(h, req);
+    }
+    h ^= metal_layout.flatten_stride;
+    h *= kFnv1a64Prime;
+    h ^= metal_layout.buffer_base;
+    h *= kFnv1a64Prime;
+    return h;
+}
+
+std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
+                                         const std::vector<CrossTarget>& targets,
+                                         const MetalBindingLayout& metal_layout,
+                                         std::uint64_t metal_program_fingerprint) {
+    uint64_t h = kFnv1a64Offset;
+    hashCompileRequest(h, req);
     bool has_msl = false;
     for (auto t : targets) {
         h ^= static_cast<uint64_t>(t);
@@ -187,6 +214,8 @@ std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
         h ^= metal_layout.flatten_stride;
         h *= kFnv1a64Prime;
         h ^= metal_layout.buffer_base;
+        h *= kFnv1a64Prime;
+        h ^= metal_program_fingerprint;
         h *= kFnv1a64Prime;
     }
     return toHex(h);
@@ -211,7 +240,7 @@ std::optional<StageArtifact> ShaderArtifactCache::lookup(const std::string& key)
         return std::nullopt;
     StageArtifact artifact;
     if (!deserializeArtifact(data, artifact)) {
-        VNE_LOG_WARN << "ShaderArtifactCache: corrupt artifact at " << path << " — ignoring";
+        VNE_LOG_WARN << "ShaderArtifactCache: corrupt artifact at " << path << " - ignoring";
         return std::nullopt;
     }
     VNE_LOG_DEBUG << "ShaderArtifactCache: cache hit for key " << key;

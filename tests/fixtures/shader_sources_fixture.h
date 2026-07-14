@@ -11,7 +11,7 @@
  */
 
 /**
- * @file fixtures/shader_sources_fixture.h — shared GLSL sources for integration tests.
+ * @file fixtures/shader_sources_fixture.h - shared GLSL sources for integration tests.
  */
 
 #include <gtest/gtest.h>

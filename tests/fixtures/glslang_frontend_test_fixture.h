@@ -11,7 +11,7 @@
  */
 
 /**
- * @file fixtures/glslang_frontend_test_fixture.h — base fixture for GlslangFrontEnd tests.
+ * @file fixtures/glslang_frontend_test_fixture.h - base fixture for GlslangFrontEnd tests.
  */
 
 #include "fixtures/shader_sources_fixture.h"

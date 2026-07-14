@@ -27,7 +27,7 @@ namespace vne::sc {
  * @brief Validates a SPIR-V binary against the Vulkan rules.
  *
  * A no-op implementation is used when the backing validation library is not
- * compiled in — it always returns @ref ResultCode::eSuccess.
+ * compiled in - it always returns @ref ResultCode::eSuccess.
  */
 class IShaderValidator {
    public:

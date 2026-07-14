@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     const std::filesystem::path bundle_path(output_dir);
 
     // A manifest with no "variants" behaves as exactly one implicit, unnamed
-    // variant — no defines, no bundle-path suffix — reproducing prior behavior
+    // variant - no defines, no bundle-path suffix - reproducing prior behavior
     // for every manifest that doesn't opt into variants.
     std::vector<vne::sc::ShaderVariantSpec> variants = manifest->variants;
     if (variants.empty()) {
@@ -138,7 +138,7 @@ int main(int argc, char** argv) {
             return 1;
         }
 
-        // Only the first variant emits binding decls — it's the "schema owner" for
+        // Only the first variant emits binding decls - it's the "schema owner" for
         // the family; list a variant whose resource usage is a superset of the
         // others first, since later variants never contribute back into the file.
         if (variant_index == 0 && !manifest->emit_binding_decls.empty()) {
@@ -161,7 +161,7 @@ int main(int argc, char** argv) {
         std::cout << "Bundle written to: " << this_output << "\n";
         std::cout << "  Stages: " << result.artifact.stages.size() << "\n";
         for (const auto& stage : result.artifact.stages) {
-            std::cout << "  - stage " << static_cast<int>(stage.stage) << " | spirv=" << stage.spirv.size() << " words"
+            std::cout << " - stage " << static_cast<int>(stage.stage) << " | spirv=" << stage.spirv.size() << " words"
                       << " | cross=" << stage.cross_compiled.size() << " target(s)\n";
         }
     }

@@ -12,7 +12,7 @@ CREATE_VNE_LOGGER_CATEGORY("vnesc.examples")
 namespace vne::sc::examples {
 
 /**
- * @brief RAII guard — configures console logging for vnesc examples.
+ * @brief RAII guard - configures console logging for vnesc examples.
  *
  * Place at the start of `main()` so library log output (pipeline, glslang, etc.)
  * and example messages share the same sink.

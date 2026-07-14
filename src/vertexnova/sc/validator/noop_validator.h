@@ -21,7 +21,7 @@
 namespace vne::sc {
 
 /**
- * @brief Pass-through validator — accepts every SPIR-V binary without inspection.
+ * @brief Pass-through validator - accepts every SPIR-V binary without inspection.
  *
  * @ref isAvailable returns @c true so the pipeline builder does not skip the
  * validation step; it simply always succeeds.

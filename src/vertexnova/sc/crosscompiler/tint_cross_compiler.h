@@ -12,7 +12,7 @@
 
 /**
  * @file tint_cross_compiler.h
- * @brief SPIR-V → WGSL cross-compiler using Dawn Tint.
+ * @brief SPIR-V -> WGSL cross-compiler using Dawn Tint.
  */
 
 #include "vertexnova/sc/shader_cross_compiler.h"

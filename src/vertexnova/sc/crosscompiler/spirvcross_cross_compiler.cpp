@@ -11,12 +11,15 @@
 
 #include "spirvcross_cross_compiler.h"
 
+#include "vertexnova/sc/metal_binding_allocator.h"
+
 #include "spirv_cross.hpp"
 #include "spirv_glsl.hpp"
 #include "spirv_msl.hpp"
 
 #include "vertexnova/logging/logging.h"
 
+#include <memory>
 #include <regex>
 #include <sstream>
 #include <unordered_map>
@@ -25,17 +28,7 @@ CREATE_VNE_LOGGER_CATEGORY("vne.sc.crosscompiler")
 
 namespace {
 
-inline uint32_t metalBufferSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return layout.buffer_base + (set * layout.flatten_stride + binding);
-}
-inline uint32_t metalTextureSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
-inline uint32_t metalSamplerSlot(uint32_t set, uint32_t binding, const vne::sc::MetalBindingLayout& layout) noexcept {
-    return set * layout.flatten_stride + binding;
-}
-
-// ── Sampler index post-processing ─────────────────────────────────────────────
+// Sampler index post-processing
 // SPIRV-Cross doesn't always correctly remap sampler indices when splitting combined
 // samplers. Fix by making each sampler's [[sampler(N)]] match its paired texture's
 // [[texture(N)]] index.
@@ -61,12 +54,12 @@ void fixCombinedSamplerIndices(std::string& msl) {
     }
 }
 
-// ── FixMSLFragmentSignature ────────────────────────────────────────────────────
+// FixMSLFragmentSignature
 // Ensure the fragment shader references a valid stage_in struct.
 // Ports the hard-won FixMSLFragmentSignature logic from the old spirv_cross_compiler.cpp.
 void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl) {
     if (frag_msl.find("[[stage_in]]") != std::string::npos) {
-        // stage_in already present — verify the referenced struct exists
+        // stage_in already present - verify the referenced struct exists
         std::regex frag_fn_re(R"(fragment\s+(\w+)\s+(\w+)\s*\(([^)]*)\))");
         std::smatch frag_fn_m;
         if (std::regex_search(frag_msl, frag_fn_m, frag_fn_re)) {
@@ -76,7 +69,7 @@ void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl)
             if (std::regex_search(params, si_m, si_re)) {
                 const std::string si_type = si_m[1].str();
                 if (frag_msl.find("struct " + si_type) != std::string::npos) {
-                    return;  // struct exists — nothing to do
+                    return;  // struct exists - nothing to do
                 }
                 // Try to synthesize struct from vertex output
                 std::regex vo_re(R"(struct\s+(\w+)\s*\{[^}]*\[\[position\]\])");
@@ -106,7 +99,7 @@ void fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl)
         return;
     }
 
-    // No stage_in — try to inject vertex output struct + stage_in parameter.
+    // No stage_in - try to inject vertex output struct + stage_in parameter.
     std::regex frag_fn_re(R"(fragment\s+(\w+)\s+(\w+)\s*\(([^)]*)\))");
     std::smatch frag_fn_m;
     if (!std::regex_search(frag_msl, frag_fn_m, frag_fn_re))
@@ -190,7 +183,7 @@ CrossCompileResult SpirvCrossCrossCompiler::crossCompile(const CrossCompileReque
     }
 }
 
-// ── MSL ───────────────────────────────────────────────────────────────────────
+// MSL
 CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req) {
     CrossCompileResult result;
     try {
@@ -201,7 +194,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
         opts.use_framebuffer_fetch_subpasses = false;
         compiler.set_msl_options(opts);
 
-        // ── Determine execution model ──────────────────────────────────────────
+        // Determine execution model
         std::string entry_name = "main";
         spv::ExecutionModel exec_model = spv::ExecutionModelMax;
         {
@@ -218,93 +211,22 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             return result;
         }
 
-        // ── Resource binding remapping ─────────────────────────────────────────
-        // Note: do NOT call build_combined_image_samplers() for MSL. CompilerMSL
-        // handles OpSampledImage (from separate texture2D + sampler) natively.
-        // Calling it creates synthetic combined variables that conflict with the
-        // original separate resources, producing duplicate [[texture(N)]] slots.
-        auto resources = compiler.get_shader_resources();
-
-        // Combined image samplers (sampler2D uniforms in Vulkan GLSL → sampled_images in SPIR-V)
-        for (const auto& r : resources.sampled_images) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
-            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
+        // Resource binding remapping
+        // Dense (set,binding)->Metal index map. Prefer the program-wide signature from
+        // ShaderPipelineBuilder so all stages agree; otherwise allocate stage-locally.
+        // Note: do NOT call build_combined_image_samplers() for MSL.
+        std::unique_ptr<vne::sc::MetalBindingAllocator> stage_local_map;
+        const vne::sc::MetalBindingAllocator* metal_map = req.metal_program_map;
+        if (metal_map == nullptr) {
+            stage_local_map = std::make_unique<vne::sc::MetalBindingAllocator>(compiler, req.metal_layout);
+            metal_map = stage_local_map.get();
         }
-
-        // Uniform buffers
-        for (const auto& r : resources.uniform_buffers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
+        if (const std::string overflow = metal_map->overflowError(); !overflow.empty()) {
+            result.code = ResultCode::eCrossCompileFailed;
+            result.error = "SpirvCrossCrossCompiler: " + overflow;
+            return result;
         }
-
-        // Storage buffers
-        for (const auto& r : resources.storage_buffers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_buffer = metalBufferSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
-
-        // Separate images
-        for (const auto& r : resources.separate_images) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_texture = metalTextureSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
-
-        // Separate samplers
-        for (const auto& r : resources.separate_samplers) {
-            uint32_t set = compiler.has_decoration(r.id, spv::DecorationDescriptorSet)
-                               ? compiler.get_decoration(r.id, spv::DecorationDescriptorSet)
-                               : 0;
-            uint32_t binding = compiler.has_decoration(r.id, spv::DecorationBinding)
-                                   ? compiler.get_decoration(r.id, spv::DecorationBinding)
-                                   : 0;
-            spirv_cross::MSLResourceBinding mb{};
-            mb.stage = exec_model;
-            mb.desc_set = set;
-            mb.binding = binding;
-            mb.msl_sampler = metalSamplerSlot(set, binding, req.metal_layout);
-            compiler.add_msl_resource_binding(mb);
-        }
+        vne::sc::applyMslResourceBindings(compiler, *metal_map, exec_model);
 
         // Disable unused fragment inputs to suppress spurious [[stage_in]] parameters
         if (exec_model == spv::ExecutionModelFragment) {
@@ -342,7 +264,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
             fixCombinedSamplerIndices(result.source);
         }
 
-        // Extract final MSL entry point name (SPIRV-Cross may rename "main" → "main0")
+        // Extract final MSL entry point name (SPIRV-Cross may rename "main" -> "main0")
         try {
             result.entry_point = compiler.get_cleansed_entry_point_name(entry_name, exec_model);
         } catch (...) {
@@ -362,7 +284,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toMSL(const CrossCompileRequest& req
     }
 }
 
-// ── GLSL / GLSL ES ────────────────────────────────────────────────────────────
+// GLSL / GLSL ES
 CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& req, bool es) {
     CrossCompileResult result;
     try {
@@ -379,7 +301,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& re
         opts.vertex.flip_vert_y = false;
         compiler.set_common_options(opts);
 
-        // Build combined image samplers (required for GLSL — no separate images+samplers)
+        // Build combined image samplers (required for GLSL - no separate images+samplers)
         compiler.build_combined_image_samplers();
         for (const auto& c : compiler.get_combined_image_samplers()) {
             const std::string img_name = compiler.get_name(c.image_id);
@@ -406,7 +328,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toGLSL(const CrossCompileRequest& re
     }
 }
 
-// ── WGSL ─────────────────────────────────────────────────────────────────────
+// WGSL
 CrossCompileResult SpirvCrossCrossCompiler::toWGSL(const CrossCompileRequest& req) {
     CrossCompileResult result;
     (void)req;
@@ -417,7 +339,7 @@ CrossCompileResult SpirvCrossCrossCompiler::toWGSL(const CrossCompileRequest& re
     return result;
 }
 
-// ── FixMSLFragmentSignature ────────────────────────────────────────────────────
+// FixMSLFragmentSignature
 void SpirvCrossCrossCompiler::fixMSLFragmentSignature(std::string& frag_msl, const std::string& vert_msl) {
     ::fixMSLFragmentSignature(frag_msl, vert_msl);
 }

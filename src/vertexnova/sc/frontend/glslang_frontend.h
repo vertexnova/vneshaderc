@@ -12,7 +12,7 @@
 
 /**
  * @file glslang_frontend.h
- * @brief glslang-based GLSL → SPIR-V compiler front-end.
+ * @brief glslang-based GLSL -> SPIR-V compiler front-end.
  */
 
 #include "vertexnova/sc/shader_frontend.h"

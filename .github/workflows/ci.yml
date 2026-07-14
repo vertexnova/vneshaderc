@@ -5,12 +5,12 @@
 # Author:    Ajeet Singh Yadav
 # Created:   February 2026
 #
-# Description: CI pipeline — staged, gated, with concurrency cancellation.
-# Stage 1 — Pre-checks  : clang-format (fail-fast gate), commit-lint (warning only)
-# Stage 2+3 — Build+Test: Linux GCC/Clang/ASan, macOS, Windows (static libs only)
-# Stage 4 — Analysis    : clang-tidy (reuses Clang build cache)
-# Stage 5 — CI Gate     : single required status check for branch protection
-# Branch protection: require only "CI Gate" — not individual job names.
+# Description: CI pipeline - staged, gated, with concurrency cancellation.
+# Stage 1 - Pre-checks  : clang-format (fail-fast gate), commit-lint (warning only)
+# Stage 2+3 - Build+Test: Linux GCC/Clang/ASan, macOS, Windows (static libs only)
+# Stage 4 - Analysis    : clang-tidy (reuses Clang build cache)
+# Stage 5 - CI Gate     : single required status check for branch protection
+# Branch protection: require only "CI Gate" - not individual job names.
 #
 # Autodoc:   yes
 # ----------------------------------------------------------------------
@@ -43,7 +43,7 @@ jobs:
   # STAGE 0: DETECT RELEASE-PLEASE COMMITS
   # Release-please merges only touch: CHANGELOG.md, VERSION,
   # .release-please-manifest.json, release-please-config.json.
-  # Skip all builds for those commits — CI already ran on the source PR.
+  # Skip all builds for those commits - CI already ran on the source PR.
   # ====================================================================
 
   detect-release:
@@ -69,7 +69,7 @@ jobs:
           if [[ "$EVENT" == "pull_request" ]]; then
             if [[ "$HEAD_REF" == release-please--* ]]; then
               IS_RELEASE=true
-              echo "Release-please PR detected (branch: $HEAD_REF) — skipping builds."
+              echo "Release-please PR detected (branch: $HEAD_REF) - skipping builds."
             fi
           fi
 
@@ -88,7 +88,7 @@ jobs:
 
             if [[ "$ACTOR_MATCH" == "true" && -z "$NON_RELEASE" && -n "$CHANGED" ]]; then
               IS_RELEASE=true
-              echo "Release-please merge detected (actor: $ACTOR, files: $CHANGED) — skipping builds."
+              echo "Release-please merge detected (actor: $ACTOR, files: $CHANGED) - skipping builds."
             fi
           fi
 
@@ -96,7 +96,7 @@ jobs:
 
   # ====================================================================
   # STAGE 1: PRE-CHECKS (fail-fast gate)
-  # These jobs do NOT clone submodules — they only need source files.
+  # These jobs do NOT clone submodules - they only need source files.
   # If any pre-check fails the gate blocks all downstream builds.
   # ====================================================================
 
@@ -108,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: false   # clang-format only reads src/ include/ — no deps needed
+          submodules: false   # clang-format only reads src/ include/ - no deps needed
 
       - name: Install clang-format-17
         # Pin to 17: the .clang-format file uses options removed in clang-format 18+
@@ -131,7 +131,7 @@ jobs:
     name: "Pre-checks / commit messages"
     runs-on: ubuntu-latest
     # Only validate on PRs. Push-to-main arrives as release-please merge
-    # commits (chore(main): release X.Y.Z) which are always valid — and
+    # commits (chore(main): release X.Y.Z) which are always valid - and
     # validating every commit in a merge-commit ancestry is fragile.
     if: github.event_name == 'pull_request'
     permissions:
@@ -317,8 +317,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_C_COMPILER=clang \
               -DCMAKE_CXX_COMPILER=clang++ \
-              -DVNE_TEMPLATE_CI=ON \
-              -DVNE_TEMPLATE_LIB_TYPE=static \
+              -DVNE_SC_CI=ON \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
             cmake --build build/static --config Release --parallel
           fi
@@ -337,7 +336,7 @@ jobs:
   # ====================================================================
   # STAGE 5: CI GATE
   # Single required status check. Branch protection should require only
-  # this job — not the individual build job names. This ensures the
+  # this job - not the individual build job names. This ensures the
   # required check name stays stable even as build jobs are renamed.
   # ====================================================================
 

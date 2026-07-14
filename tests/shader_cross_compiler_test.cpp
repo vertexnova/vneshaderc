@@ -50,7 +50,7 @@ TEST_F(ShaderCrossCompilerTest, WgslReturnsUnavailableWithoutTint) {
     EXPECT_FALSE(ccres.ok());
     EXPECT_EQ(ccres.code, ResultCode::eUnavailable);
 #else
-    GTEST_SKIP() << "Tint enabled — see TintCrossCompilerTest";
+    GTEST_SKIP() << "Tint enabled - see TintCrossCompilerTest";
 #endif
 }
 

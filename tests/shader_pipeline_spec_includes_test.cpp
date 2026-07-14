@@ -21,7 +21,7 @@ namespace vne::sc::test {
 
 class ShaderPipelineSpecIncludesTest : public GlslangFrontEndTestFixture {};
 
-// ── include_paths → toBuildDesc wiring ───────────────────────────────────────
+// include_paths -> toBuildDesc wiring
 
 TEST_F(ShaderPipelineSpecIncludesTest, IncludePathsResolvedRelativeToSpecDir) {
 #ifndef VNE_SC_JSON_ENABLED
@@ -72,7 +72,7 @@ TEST_F(ShaderPipelineSpecIncludesTest, EmptyIncludePathsProducesNoIncludeDirs) {
 #endif
 }
 
-// ── end-to-end: glslang compiles a shader that uses #include ─────────────────
+// end-to-end: glslang compiles a shader that uses #include
 
 TEST_F(ShaderPipelineSpecIncludesTest, GlslangCompilesShaderWithIncludedFile) {
     auto fe = requireGlslangFrontEnd();

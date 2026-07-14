@@ -102,7 +102,7 @@ def download_naga(version: str, output_dir: Path, verbose: bool) -> int:
                         with zf.open(name) as src, open(dest, "wb") as dst:
                             dst.write(src.read())
                         if verbose:
-                            print(f"  extracted: {name} → naga")
+                            print(f"  extracted: {name} -> naga")
                         break
                 else:
                     sys.stderr.write("error: naga binary not found in zip\n")
