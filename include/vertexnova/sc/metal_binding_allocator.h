@@ -86,9 +86,11 @@ class MetalBindingAllocator {
     [[nodiscard]] std::string overflowError() const;
 
     /**
-     * @brief Stable fingerprint of the assigned maps (for artifact cache keys).
+     * @brief Stable fingerprint of the assigned dense maps (SPIR-V-derived).
      *
-     * Two programs with the same logical resource union produce the same fingerprint.
+     * Two programs with the same logical resource union produce the same value.
+     * Artifact cache keys should use a source-level program fingerprint instead
+     * so lookup does not require compiling first.
      */
     [[nodiscard]] std::uint64_t fingerprint() const noexcept;
 

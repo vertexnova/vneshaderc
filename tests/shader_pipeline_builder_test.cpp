@@ -12,11 +12,38 @@
 #include <gtest/gtest.h>
 
 #include "fixtures/shader_pipeline_builder_test_fixture.h"
+#include "vertexnova/sc/shader_artifact_cache.h"
+#include "vertexnova/sc/shader_compiler_factory.h"
+#include "vertexnova/sc/shader_frontend.h"
+#include "vertexnova/sc/shader_pipeline_builder.h"
 
+#include <memory>
 #include <optional>
 #include <string>
 
 namespace vne::sc::test {
+namespace {
+
+class CountingFrontEnd final : public IShaderFrontEnd {
+   public:
+    explicit CountingFrontEnd(std::shared_ptr<IShaderFrontEnd> inner)
+        : inner_(std::move(inner)) {}
+
+    [[nodiscard]] bool isAvailable() const noexcept override { return inner_ && inner_->isAvailable(); }
+
+    CompileResult compile(const CompileRequest& req) override {
+        ++compile_count_;
+        return inner_->compile(req);
+    }
+
+    [[nodiscard]] int compileCount() const noexcept { return compile_count_; }
+
+   private:
+    std::shared_ptr<IShaderFrontEnd> inner_;
+    int compile_count_ = 0;
+};
+
+}  // namespace
 
 class ShaderPipelineBuilderTest : public ShaderPipelineBuilderTestFixture {};
 
@@ -43,20 +70,62 @@ TEST_F(ShaderPipelineBuilderTest, FullBuildProducesValidArtifact) {
 
 TEST_F(ShaderPipelineBuilderTest, CacheHitSkipsRecompilation) {
     auto tmp = tempDir("vnesc_shader_pipeline_builder_cache");
-    auto builder = makeGlslPipelineBuilder();
-    ASSERT_NE(builder, nullptr);
+    auto frontend = std::make_shared<CountingFrontEnd>(ShaderCompilerFactory::createFrontEnd(SourceLang::eGLSL));
+    auto builder = std::make_shared<ShaderPipelineBuilder>(frontend,
+                                                           ShaderCompilerFactory::createCrossCompiler(),
+                                                           ShaderCompilerFactory::createReflector(),
+                                                           ShaderCompilerFactory::createValidator());
 
     auto desc = makeVertMslDesc("cached_pipeline", true, tmp.string());
     auto r1 = builder->build(desc);
     ASSERT_TRUE(r1.ok()) << r1.error;
+    EXPECT_EQ(frontend->compileCount(), 1);
 
     auto r2 = builder->build(desc);
     ASSERT_TRUE(r2.ok()) << r2.error;
+    EXPECT_EQ(frontend->compileCount(), 1) << "cache hit must not re-invoke the front-end";
     ASSERT_FALSE(r1.artifact.stages.empty());
     ASSERT_FALSE(r2.artifact.stages.empty());
     EXPECT_EQ(r1.artifact.stages[0].spirv, r2.artifact.stages[0].spirv);
 
     removeTempDir(tmp);
+}
+
+TEST_F(ShaderPipelineBuilderTest, SiblingStageChangeInvalidatesProgramCacheKeys) {
+    CompileRequest vert;
+    vert.stage = ShaderStage::eVertex;
+    vert.source = R"glsl(
+        #version 450
+        layout(set = 0, binding = 0) uniform A { float a; } ua;
+        void main() { gl_Position = vec4(ua.a); }
+    )glsl";
+
+    CompileRequest frag_a;
+    frag_a.stage = ShaderStage::eFragment;
+    frag_a.source = R"glsl(
+        #version 450
+        layout(location = 0) out vec4 o;
+        layout(set = 0, binding = 0) uniform A { float a; } ua;
+        void main() { o = vec4(ua.a); }
+    )glsl";
+
+    CompileRequest frag_b = frag_a;
+    frag_b.source = R"glsl(
+        #version 450
+        layout(location = 0) out vec4 o;
+        layout(set = 0, binding = 0) uniform A { float a; } ua;
+        layout(set = 1, binding = 0) uniform B { float b; } ub;
+        void main() { o = vec4(ua.a + ub.b); }
+    )glsl";
+
+    MetalBindingLayout layout;
+    const auto fp_a = ShaderArtifactCache::makeProgramFingerprint({vert, frag_a}, layout);
+    const auto fp_b = ShaderArtifactCache::makeProgramFingerprint({vert, frag_b}, layout);
+    EXPECT_NE(fp_a, fp_b);
+
+    const auto key_vert_a = ShaderArtifactCache::makeKey(vert, {CrossTarget::eMSL}, layout, fp_a);
+    const auto key_vert_b = ShaderArtifactCache::makeKey(vert, {CrossTarget::eMSL}, layout, fp_b);
+    EXPECT_NE(key_vert_a, key_vert_b);
 }
 
 TEST_F(ShaderPipelineBuilderTest, MultiSetMetalSlotsAgreeAcrossStages) {

@@ -44,12 +44,24 @@ class ShaderArtifactCache {
     ~ShaderArtifactCache() = default;
 
     /**
+     * @brief Program-wide fingerprint from compile inputs only (no SPIR-V).
+     *
+     * Hashes every stage's source/path/entry/stage/lang/macros plus
+     * @p metal_layout. Use this for MSL dense program maps so cache keys are
+     * available before front-end compile. Changing any stage invalidates all
+     * stage keys that embed this fingerprint.
+     */
+    [[nodiscard]] static std::uint64_t makeProgramFingerprint(const std::vector<CompileRequest>& stages,
+                                                              const MetalBindingLayout& metal_layout = {});
+
+    /**
      * @brief Derives a deterministic cache key from a compile request.
      *
      * The key encodes source text, file path, entry point, stage, language,
      * optimisation level, preprocessor macros, cross-compilation targets,
-     * @ref MetalBindingLayout, and an optional program-wide Metal signature
-     * fingerprint when @c CrossTarget::eMSL is among @p targets.
+     * @ref MetalBindingLayout, and an optional program-wide fingerprint when
+     * @c CrossTarget::eMSL is among @p targets. Prefer
+     * @ref makeProgramFingerprint for that value so lookup can run before compile.
      */
     static std::string makeKey(const CompileRequest& req,
                                const std::vector<CrossTarget>& targets,

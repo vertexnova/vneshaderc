@@ -65,20 +65,44 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
 
     const bool wants_msl = std::find(desc.targets.begin(), desc.targets.end(), CrossTarget::eMSL) != desc.targets.end();
 
-    // Single pass, phase A: compile + validate every stage into memory
+    // Source-level program fingerprint (no SPIR-V). Embed in MSL dense cache keys so
+    // lookup can run before compile; changing any stage invalidates every stage key.
+    const std::uint64_t metal_program_fingerprint =
+        (wants_msl && desc.metal_dense_program_map)
+            ? ShaderArtifactCache::makeProgramFingerprint(desc.stages, desc.metal_layout)
+            : 0ULL;
+
+    if (wants_msl && !desc.metal_dense_program_map) {
+        VNE_LOG_WARN << "ShaderPipelineBuilder: metal_dense_program_map=false - using stage-local Metal maps";
+    }
+
     struct StageWork {
         CompileRequest req;
         StageArtifact artifact;
-        bool from_cache = false;
+        std::string cache_key;
+        bool needs_backend = true;  // false when a full StageArtifact was loaded from cache
     };
     std::vector<StageWork> work;
     work.reserve(desc.stages.size());
 
+    // Phase A: cache lookup first; compile + validate only on miss.
     for (const auto& req : desc.stages) {
         StageWork sw;
         sw.req = req;
         sw.artifact.stage = req.stage;
         sw.artifact.entry_point = req.entry_point;
+        if (cache) {
+            sw.cache_key =
+                ShaderArtifactCache::makeKey(sw.req, desc.targets, desc.metal_layout, metal_program_fingerprint);
+            auto cached = cache->lookup(sw.cache_key);
+            if (cached.has_value()) {
+                VNE_LOG_DEBUG << "ShaderPipelineBuilder: cache hit for stage " << static_cast<int>(sw.req.stage);
+                sw.artifact = std::move(*cached);
+                sw.needs_backend = false;
+                work.push_back(std::move(sw));
+                continue;
+            }
+        }
 
         VNE_LOG_DEBUG << "ShaderPipelineBuilder: compiling stage " << static_cast<int>(req.stage);
         CompileResult cr = front_end_->compile(req);
@@ -114,10 +138,12 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
         work.push_back(std::move(sw));
     }
 
-    // Program-link precompute (Metal only): one dense map for all stages
+    const bool any_miss = std::any_of(work.begin(), work.end(), [](const StageWork& sw) { return sw.needs_backend; });
+
+    // Program-link precompute (Metal only): needed when at least one stage must
+    // reflect / cross-compile with the shared dense map.
     std::unique_ptr<MetalBindingAllocator> metal_program_map;
-    std::uint64_t metal_fingerprint = 0;
-    if (wants_msl && desc.metal_dense_program_map) {
+    if (any_miss && wants_msl && desc.metal_dense_program_map) {
         std::vector<std::vector<std::uint32_t>> stage_spirv;
         stage_spirv.reserve(work.size());
         for (const auto& sw : work) {
@@ -131,18 +157,16 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
             VNE_LOG_ERROR << result.error;
             return result;
         }
-        metal_fingerprint = metal_program_map->fingerprint();
         {
             std::ostringstream oss;
-            oss << "ShaderPipelineBuilder: Metal program signature fingerprint=0x" << std::hex << metal_fingerprint;
+            oss << "ShaderPipelineBuilder: Metal program signature fingerprint=0x" << std::hex
+                << metal_program_map->fingerprint();
             VNE_LOG_DEBUG << oss.str();
         }
-    } else if (wants_msl) {
-        VNE_LOG_WARN << "ShaderPipelineBuilder: metal_dense_program_map=false - using stage-local Metal maps";
     }
 
-    // Single pass, phase B: cache / reflect / cross-compile per stage
-    if (!desc.targets.empty() && !cross_compiler_) {
+    // Phase B: reflect / cross-compile / store for cache misses only.
+    if (any_miss && !desc.targets.empty() && !cross_compiler_) {
         result.code = ResultCode::eUnavailable;
         result.error = "ShaderPipelineBuilder: cross-compiler not available";
         VNE_LOG_ERROR << result.error;
@@ -150,21 +174,12 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
     }
 
     for (auto& sw : work) {
-        const std::string key =
-            cache ? ShaderArtifactCache::makeKey(sw.req, desc.targets, desc.metal_layout, metal_fingerprint)
-                  : std::string{};
-
-        if (cache) {
-            auto cached = cache->lookup(key);
-            if (cached.has_value()) {
-                VNE_LOG_DEBUG << "ShaderPipelineBuilder: cache hit for stage " << static_cast<int>(sw.req.stage);
-                // Keep freshly compiled SPIR-V if cache somehow lacked it; prefer cached full stage.
-                result.artifact.stages.push_back(std::move(*cached));
-                continue;
-            }
+        if (!sw.needs_backend) {
+            // Cache hit: move the stored StageArtifact wholesale into the result.
+            result.artifact.stages.push_back(std::move(sw.artifact));
+            continue;
         }
 
-        // Reflect with shared Metal map (Vulkan/WebGPU set/binding unchanged).
         if (reflector_) {
             ReflectResult rr = reflector_->reflect(sw.artifact.spirv,
                                                    sw.req.stage,
@@ -218,8 +233,8 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
             }
         }
 
-        if (cache && !key.empty()) {
-            cache->store(key, sw.artifact);
+        if (cache && !sw.cache_key.empty()) {
+            cache->store(sw.cache_key, sw.artifact);
         }
 
         result.artifact.stages.push_back(std::move(sw.artifact));

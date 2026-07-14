@@ -69,13 +69,14 @@ struct PipelineBuildResult {
  * @brief Drives the full offline compilation sequence:
  *        source -> SPIR-V -> validate -> reflect -> cross-compile -> @ref ShaderArtifact.
  *
- * The pipeline is:
- *  -# Cache lookup - return early on hit.
- *  -# @ref IShaderFrontEnd::compile     - source -> SPIR-V.
- *  -# @ref IShaderValidator::validate   - optional SPIR-V validation.
- *  -# @ref IShaderReflector::reflect - SPIR-V -> typed @ref StageReflection.
- *  -# @ref IShaderCrossCompiler::crossCompile - SPIR-V -> target source (one per target).
- *  -# Cache store.
+ * Per stage the pipeline is:
+ *  -# Cache lookup (key includes a source-level program fingerprint for MSL dense maps).
+ *  -# On miss: @ref IShaderFrontEnd::compile, optional validate, reflect, cross-compile, store.
+ *  -# On hit: reuse the cached @ref StageArtifact (no front-end compile).
+ *
+ * When any stage misses and MSL dense program maps are enabled, one shared
+ * @ref MetalBindingAllocator is built from the union of all stage SPIR-V
+ * (cached and freshly compiled) before reflect / cross-compile of the misses.
  */
 class IShaderPipelineBuilder {
    public:

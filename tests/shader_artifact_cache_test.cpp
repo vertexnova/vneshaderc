@@ -89,6 +89,20 @@ TEST_F(ShaderArtifactCacheTest, DifferentMetalProgramFingerprintProducesDifferen
               ShaderArtifactCache::makeKey(req, targets, layout, 0xABCDULL));
 }
 
+TEST_F(ShaderArtifactCacheTest, MakeProgramFingerprintIsSourceLevelAndDeterministic) {
+    CompileRequest a;
+    a.source = "void main() { int x = 1; }";
+    a.stage = ShaderStage::eVertex;
+    CompileRequest b = a;
+    b.source = "void main() { int x = 2; }";
+    MetalBindingLayout layout;
+
+    EXPECT_EQ(ShaderArtifactCache::makeProgramFingerprint({a}, layout),
+              ShaderArtifactCache::makeProgramFingerprint({a}, layout));
+    EXPECT_NE(ShaderArtifactCache::makeProgramFingerprint({a}, layout),
+              ShaderArtifactCache::makeProgramFingerprint({b}, layout));
+}
+
 TEST_F(ShaderArtifactCacheTest, StoreAndLookupRoundTrip) {
     namespace fs = std::filesystem;
     auto tmp = makeUniqueTempPath("vnesc_shader_artifact_cache_roundtrip");

@@ -157,11 +157,9 @@ ShaderArtifactCache::ShaderArtifactCache(std::string cache_dir)
     }
 }
 
-std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
-                                         const std::vector<CrossTarget>& targets,
-                                         const MetalBindingLayout& metal_layout,
-                                         std::uint64_t metal_program_fingerprint) {
-    uint64_t h = kFnv1a64Offset;
+namespace {
+
+void hashCompileRequest(uint64_t& h, const CompileRequest& req) noexcept {
     hashStr(h, req.source);
     hashStr(h, req.file_path);
     hashStr(h, req.entry_point);
@@ -177,6 +175,34 @@ std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
         hashStr(h, m.name);
         hashStr(h, m.value);
     }
+    for (const auto& dir : req.include_dirs) {
+        hashStr(h, dir);
+    }
+}
+
+}  // namespace
+
+std::uint64_t ShaderArtifactCache::makeProgramFingerprint(const std::vector<CompileRequest>& stages,
+                                                          const MetalBindingLayout& metal_layout) {
+    uint64_t h = kFnv1a64Offset;
+    h ^= static_cast<uint64_t>(stages.size());
+    h *= kFnv1a64Prime;
+    for (const auto& req : stages) {
+        hashCompileRequest(h, req);
+    }
+    h ^= metal_layout.flatten_stride;
+    h *= kFnv1a64Prime;
+    h ^= metal_layout.buffer_base;
+    h *= kFnv1a64Prime;
+    return h;
+}
+
+std::string ShaderArtifactCache::makeKey(const CompileRequest& req,
+                                         const std::vector<CrossTarget>& targets,
+                                         const MetalBindingLayout& metal_layout,
+                                         std::uint64_t metal_program_fingerprint) {
+    uint64_t h = kFnv1a64Offset;
+    hashCompileRequest(h, req);
     bool has_msl = false;
     for (auto t : targets) {
         h ^= static_cast<uint64_t>(t);
