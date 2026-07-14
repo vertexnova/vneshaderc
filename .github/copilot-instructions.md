@@ -6,9 +6,9 @@ Use this for every PR review in this repository: optimize for correctness, safet
 
 - Start with a brief summary (1-3 bullets): what changed + biggest risks.
 - Then list issues grouped by severity:
- - **BLOCKER** (must fix before merge)
- - **MAJOR** (strongly recommended)
- - **MINOR** (nice-to-have)
+  - **BLOCKER** (must fix before merge)
+  - **MAJOR** (strongly recommended)
+  - **MINOR** (nice-to-have)
 - For each issue: point to the exact file/area, explain *why*, and propose a concrete fix.
 - If you're unsure, ask a clarifying question rather than guessing.
 

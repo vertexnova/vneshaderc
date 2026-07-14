@@ -45,7 +45,7 @@ jobs:
       tag_name:        ${{ steps.rp.outputs.tag_name }}
       version:         ${{ steps.rp.outputs.version }}
     steps:
-     - name: Run release-please
+      - name: Run release-please
         id: rp
         uses: googleapis/release-please-action@v4
         with:
@@ -55,7 +55,7 @@ jobs:
       # Enable auto-merge so the Release PR merges once CI Gate passes. If the repo
       # has not enabled "Allow auto-merge" (Settings -> General, and Branches -> main),
       # we warn and leave the PR open for manual merge instead of failing the workflow.
-     - name: Enable auto-merge on Release PR
+      - name: Enable auto-merge on Release PR
         if: steps.rp.outputs.pr != ''
         env:
           GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN || github.token }}
@@ -92,36 +92,36 @@ jobs:
       fail-fast: false
       matrix:
         include:
-         - platform: linux-gcc
+          - platform: linux-gcc
             runner:   ubuntu-latest
             c:        gcc
             cpp:      g++
-         - platform: macos
+          - platform: macos
             runner:   macos-latest
             c:        ""
             cpp:      ""
-         - platform: windows
+          - platform: windows
             runner:   windows-latest
             c:        ""
             cpp:      ""
 
     runs-on: ${{ matrix.runner }}
     steps:
-     - name: Use HTTPS for GitHub (CI runners have no SSH key)
+      - name: Use HTTPS for GitHub (CI runners have no SSH key)
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           # Exact release tag (not HEAD). Submodules: vnecmake (+ optional internal).
           # SPIRV-Cross, glslang, nlohmann/json, googletest: FetchContent at configure.
           ref: ${{ needs.release-please.outputs.tag_name }}
           submodules: recursive
 
-     - name: Install Linux build dependencies
+      - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake
 
-     - name: Configure CMake
+      - name: Configure CMake
         shell: bash
         run: |
           COMPILER_FLAGS=""
@@ -137,18 +137,18 @@ jobs:
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
             $COMPILER_FLAGS
 
-     - name: Build
+      - name: Build
         shell: bash
         run: cmake --build build/static --config Release --parallel
 
-     - name: Install to staging directory
+      - name: Install to staging directory
         shell: bash
         run: |
           # Install library + headers (vnesc) and CLI tools (vnesc_tools).
           cmake --install build/static --config Release --component vnesc
           cmake --install build/static --config Release --component vnesc_tools
 
-     - name: Verify install layout
+      - name: Verify install layout
         shell: bash
         run: |
           PREFIX="${{ github.workspace }}/install"
@@ -165,7 +165,7 @@ jobs:
           echo "Install layout OK:"
           find "$PREFIX" -maxdepth 3 -type f | head -40
 
-     - name: Package artifact
+      - name: Package artifact
         shell: bash
         run: |
           ARTIFACT="vnesc-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
@@ -175,7 +175,7 @@ jobs:
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
           echo "Published: ${ARTIFACT}"
 
-     - name: Upload to GitHub Release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.release-please.outputs.tag_name }}

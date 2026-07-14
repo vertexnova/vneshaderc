@@ -29,7 +29,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-     - name: Delete branch
+      - name: Delete branch
         env:
           # Use REPO_ACCESS_TOKEN when set (e.g. when org restricts GITHUB_TOKEN); else default token.
           GH_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN != '' && secrets.REPO_ACCESS_TOKEN || github.token }}

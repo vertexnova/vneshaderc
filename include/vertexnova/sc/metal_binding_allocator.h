@@ -76,8 +76,20 @@ class MetalBindingAllocator {
     [[nodiscard]] static MetalBindingAllocator fromProgram(const std::vector<std::vector<std::uint32_t>>& stage_spirv,
                                                            const MetalBindingLayout& layout);
 
+    /**
+     * @brief Metal [[buffer(N)]] for @p set / @p binding.
+     * @returns The assigned index. Asserts if the key was not in this allocator's resource union.
+     */
     [[nodiscard]] std::uint32_t buffer(std::uint32_t set, std::uint32_t binding) const;
+    /**
+     * @brief Metal [[texture(N)]] for @p set / @p binding.
+     * @returns The assigned index. Asserts if the key was not in this allocator's resource union.
+     */
     [[nodiscard]] std::uint32_t texture(std::uint32_t set, std::uint32_t binding) const;
+    /**
+     * @brief Metal [[sampler(N)]] for @p set / @p binding.
+     * @returns The assigned index. Asserts if the key was not in this allocator's resource union.
+     */
     [[nodiscard]] std::uint32_t sampler(std::uint32_t set, std::uint32_t binding) const;
 
     /**

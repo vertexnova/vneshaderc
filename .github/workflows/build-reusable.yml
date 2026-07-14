@@ -75,12 +75,12 @@ jobs:
     runs-on: ${{ inputs.runner }}
 
     steps:
-     - name: Use HTTPS for GitHub (CI runners have no SSH key)
+      - name: Use HTTPS for GitHub (CI runners have no SSH key)
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
       # Submodule checkout: cmake/vnecmake (required) and optional deps/internal/*.
       # Khronos shader deps and googletest are FetchContent at configure time.
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -88,7 +88,7 @@ jobs:
       # Single effective build type: always inputs.build_type (CI runs Release only).
       # Coverage uses Release + --coverage; cache key adds -coverage when enabled.
       # ------------------------------------------------------------------
-     - name: Set effective build type and cache key
+      - name: Set effective build type and cache key
         shell: bash
         env:
           BUILD_TYPE:      ${{ inputs.build_type }}
@@ -117,7 +117,7 @@ jobs:
 
       # Skip cache for coverage: we clean build/ right after to force instrumented rebuild,
       # so restore would be discarded and would waste time/bandwidth.
-     - name: Cache CMake build
+      - name: Cache CMake build
         if: ${{ !inputs.enable_coverage }}
         uses: actions/cache@v4
         with:
@@ -128,17 +128,17 @@ jobs:
             build-${{ inputs.platform }}-${{ env.CACHE_BUILD_TYPE }}-
             build-${{ inputs.platform }}-
 
-     - name: Install Linux build dependencies
+      - name: Install Linux build dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake
 
-     - name: Install lcov (coverage builds only)
+      - name: Install lcov (coverage builds only)
         if: runner.os == 'Linux' && inputs.enable_coverage
         run: sudo apt-get install -y lcov
 
       # Coverage builds must start clean - cached Release objects lack
       # --coverage instrumentation and CMake will not recompile them.
-     - name: Clean build directory (coverage only)
+      - name: Clean build directory (coverage only)
         if: inputs.enable_coverage
         shell: bash
         run: rm -rf ${{ env.BUILD_DIR }}
@@ -146,7 +146,7 @@ jobs:
       # ------------------------------------------------------------------
       # Configure - use EFFECTIVE_BUILD_TYPE from previous step (single source of truth).
       # ------------------------------------------------------------------
-     - name: Configure CMake
+      - name: Configure CMake
         shell: bash
         env:
           ENABLE_COVERAGE: ${{ inputs.enable_coverage }}
@@ -176,11 +176,11 @@ jobs:
             ${COMPILER_FLAGS} \
             ${EXTRA_FLAGS}
 
-     - name: Build
+      - name: Build
         shell: bash
         run: cmake --build "$BUILD_DIR" --config "$EFFECTIVE_BUILD_TYPE" --parallel
 
-     - name: Verify coverage instrumentation (coverage builds only, Linux)
+      - name: Verify coverage instrumentation (coverage builds only, Linux)
         if: runner.os == 'Linux' && inputs.enable_coverage
         shell: bash
         run: |
@@ -198,7 +198,7 @@ jobs:
       # Test - JUnit XML output for inline PR annotations
       # Note: --output-junit requires CMake 3.21+; ubuntu-latest ships 3.22+
       # ------------------------------------------------------------------
-     - name: Test
+      - name: Test
         shell: bash
         working-directory: ${{ env.BUILD_DIR }}
         run: |
@@ -207,7 +207,7 @@ jobs:
             --output-junit test-results.xml \
             -C "$EFFECTIVE_BUILD_TYPE"
 
-     - name: Verify .gcda files emitted (coverage builds only, Linux)
+      - name: Verify .gcda files emitted (coverage builds only, Linux)
         if: runner.os == 'Linux' && inputs.enable_coverage
         shell: bash
         run: |
@@ -220,7 +220,7 @@ jobs:
             exit 1
           fi
 
-     - name: Publish test results
+      - name: Publish test results
         uses: mikepenz/action-junit-report@v4
         if: always()
         with:
@@ -228,7 +228,7 @@ jobs:
           check_name: "Tests (${{ inputs.platform }}, ${{ env.EFFECTIVE_BUILD_TYPE }}${{ inputs.lib_type && format(', {0}', inputs.lib_type) || '' }})"
           fail_on_failure: true
 
-     - name: Upload test results
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -236,7 +236,7 @@ jobs:
           path: ${{ env.BUILD_DIR }}/test-results.xml
           retention-days: 7
 
-     - name: Write test summary
+      - name: Write test summary
         if: always()
         shell: bash
         run: |
@@ -256,7 +256,7 @@ jobs:
       # ------------------------------------------------------------------
       # Coverage (Linux/GCC only; lcov/codecov run only on Linux)
       # ------------------------------------------------------------------
-     - name: Generate lcov coverage report
+      - name: Generate lcov coverage report
         if: runner.os == 'Linux' && inputs.enable_coverage
         run: |
           lcov --capture --directory "$BUILD_DIR" --output-file coverage.info \
@@ -267,11 +267,11 @@ jobs:
             --output-file coverage.info --ignore-errors mismatch,unused,source
           lcov --list coverage.info --ignore-errors mismatch,unused,source
 
-     - name: Generate HTML coverage report
+      - name: Generate HTML coverage report
         if: runner.os == 'Linux' && inputs.enable_coverage
         run: genhtml coverage.info --output-directory coverage-html
 
-     - name: Upload coverage HTML
+      - name: Upload coverage HTML
         if: runner.os == 'Linux' && inputs.enable_coverage
         uses: actions/upload-artifact@v4
         with:
@@ -279,7 +279,7 @@ jobs:
           path: coverage-html/
           retention-days: 14
 
-     - name: Upload coverage to Codecov
+      - name: Upload coverage to Codecov
         if: runner.os == 'Linux' && inputs.enable_coverage
         uses: codecov/codecov-action@v5
         with:

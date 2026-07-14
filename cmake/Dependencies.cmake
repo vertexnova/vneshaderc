@@ -34,16 +34,22 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Map VNE_SC_<DEP>_DIR -> FETCHCONTENT_SOURCE_DIR_<DEP>.
 # FetchContent skips the network when FETCHCONTENT_SOURCE_DIR_<upper> is set.
+# Invalid or cleared overrides unset the FetchContent cache entry so a previous
+# local path cannot stick across reconfigures.
 macro(_vne_sc_apply_override _fc_name _cache_var)
-    if(DEFINED ${_cache_var} AND NOT "${${_cache_var}}" STREQUAL "")
-        if(EXISTS "${${_cache_var}}/CMakeLists.txt")
-            string(TOUPPER "${_fc_name}" _fc_upper)
-            string(REPLACE "-" "_" _fc_upper "${_fc_upper}")
-            set("FETCHCONTENT_SOURCE_DIR_${_fc_upper}" "${${_cache_var}}" CACHE PATH "" FORCE)
-            message(STATUS "[vnesc] ${_fc_name}: local override -> ${${_cache_var}}")
-        else()
+    string(TOUPPER "${_fc_name}" _fc_upper)
+    string(REPLACE "-" "_" _fc_upper "${_fc_upper}")
+    set(_fc_src_dir "FETCHCONTENT_SOURCE_DIR_${_fc_upper}")
+    if(DEFINED ${_cache_var} AND NOT "${${_cache_var}}" STREQUAL ""
+       AND EXISTS "${${_cache_var}}/CMakeLists.txt")
+        set("${_fc_src_dir}" "${${_cache_var}}" CACHE PATH "" FORCE)
+        message(STATUS "[vnesc] ${_fc_name}: local override -> ${${_cache_var}}")
+    else()
+        if(DEFINED ${_cache_var} AND NOT "${${_cache_var}}" STREQUAL ""
+           AND NOT EXISTS "${${_cache_var}}/CMakeLists.txt")
             message(WARNING "[vnesc] ${_cache_var}='${${_cache_var}}' has no CMakeLists.txt; ignored.")
         endif()
+        unset("${_fc_src_dir}" CACHE)
     endif()
 endmacro()
 

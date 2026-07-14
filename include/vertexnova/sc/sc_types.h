@@ -156,7 +156,9 @@ struct CrossCompileRequest {
      * @brief Optional program-wide dense Metal map (non-owning).
      *
      * When non-null and @c target is MSL, bindings are taken from this map instead of the
-     * flatten formula. Owned by @ref ShaderPipelineBuilder for the duration of @c build().
+     * flatten formula. Owned by @ref ShaderPipelineBuilder for the duration of @c build()
+     * only - do not retain, copy for later use, or process the request asynchronously while
+     * this pointer is set; it is dangling after @c build() returns.
      */
     const class MetalBindingAllocator* metal_program_map = nullptr;
 };

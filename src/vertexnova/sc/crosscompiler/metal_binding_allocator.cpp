@@ -15,6 +15,7 @@
 #include <spirv_msl.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 namespace vne::sc {
@@ -45,6 +46,21 @@ void collect(const spirv_cross::Compiler& compiler,
     }
 }
 
+void collectAll(const spirv_cross::Compiler& compiler,
+                std::vector<Key>& buffers,
+                std::vector<Key>& textures,
+                std::vector<Key>& combined,
+                std::vector<Key>& separate) {
+    const spirv_cross::ShaderResources res = compiler.get_shader_resources();
+    collect(compiler, res.uniform_buffers, buffers);
+    collect(compiler, res.storage_buffers, buffers);
+    collect(compiler, res.sampled_images, textures);
+    collect(compiler, res.separate_images, textures);
+    collect(compiler, res.storage_images, textures);
+    collect(compiler, res.sampled_images, combined);
+    collect(compiler, res.separate_samplers, separate);
+}
+
 void uniqueSorted(std::vector<Key>& keys) {
     std::sort(keys.begin(), keys.end());
     keys.erase(std::unique(keys.begin(), keys.end()), keys.end());
@@ -62,11 +78,22 @@ void assign(std::vector<Key>& keys, const std::uint32_t base, std::map<Key, std:
                                    const std::uint32_t set,
                                    const std::uint32_t binding) {
     const auto it = m.find(Key{set, binding});
-    return it != m.end() ? it->second : 0U;
+    if (it == m.end()) {
+        assert(false && "MetalBindingAllocator: missing (set, binding) in allocation map");
+        return 0U;
+    }
+    return it->second;
 }
 
 [[nodiscard]] std::uint32_t highest(const std::map<Key, std::uint32_t>& m) {
-    return m.empty() ? 0U : m.rbegin()->second;
+    if (m.empty()) {
+        return 0U;
+    }
+    std::uint32_t hi = 0U;
+    for (const auto& [_, idx] : m) {
+        hi = std::max(hi, idx);
+    }
+    return hi;
 }
 
 void hashMap(std::uint64_t& h, const std::map<Key, std::uint32_t>& m) {
@@ -121,23 +148,11 @@ void MetalBindingAllocator::assignFromResourceLists(const std::vector<Key>& buff
 
 MetalBindingAllocator::MetalBindingAllocator(const spirv_cross::Compiler& compiler, const MetalBindingLayout& layout)
     : layout_(layout) {
-    const spirv_cross::ShaderResources res = compiler.get_shader_resources();
-
     std::vector<Key> buffers;
-    collect(compiler, res.uniform_buffers, buffers);
-    collect(compiler, res.storage_buffers, buffers);
-
     std::vector<Key> textures;
-    collect(compiler, res.sampled_images, textures);
-    collect(compiler, res.separate_images, textures);
-    collect(compiler, res.storage_images, textures);
-
     std::vector<Key> combined;
-    collect(compiler, res.sampled_images, combined);
-
     std::vector<Key> separate;
-    collect(compiler, res.separate_samplers, separate);
-
+    collectAll(compiler, buffers, textures, combined, separate);
     assignFromResourceLists(buffers, textures, combined, separate);
 }
 
@@ -156,14 +171,7 @@ MetalBindingAllocator MetalBindingAllocator::fromProgram(const std::vector<std::
             continue;
         }
         spirv_cross::Compiler compiler(spirv.data(), spirv.size());
-        const spirv_cross::ShaderResources res = compiler.get_shader_resources();
-        collect(compiler, res.uniform_buffers, buffers);
-        collect(compiler, res.storage_buffers, buffers);
-        collect(compiler, res.sampled_images, textures);
-        collect(compiler, res.separate_images, textures);
-        collect(compiler, res.storage_images, textures);
-        collect(compiler, res.sampled_images, combined);
-        collect(compiler, res.separate_samplers, separate);
+        collectAll(compiler, buffers, textures, combined, separate);
     }
 
     alloc.assignFromResourceLists(buffers, textures, combined, separate);

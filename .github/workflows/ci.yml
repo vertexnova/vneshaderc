@@ -52,11 +52,11 @@ jobs:
     outputs:
       is_release: ${{ steps.check.outputs.is_release }}
     steps:
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 2   # need parent to diff changed files
-     - id: check
+      - id: check
         env:
           ACTOR: ${{ github.actor }}
           EVENT: ${{ github.event_name }}
@@ -106,20 +106,20 @@ jobs:
     permissions:
       contents: read
     steps:
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: false   # clang-format only reads src/ include/ - no deps needed
 
-     - name: Install clang-format-17
+      - name: Install clang-format-17
         # Pin to 17: the .clang-format file uses options removed in clang-format 18+
         # (AllowAllConstructorInitializersOnNextLine, ConstructorInitializerAllOnOneLineOrOnePerLine).
         # Update this pin together with .clang-format when upgrading.
         run: sudo apt-get update -qq && sudo apt-get install -y clang-format-17
 
-     - name: Alias clang-format
+      - name: Alias clang-format
         run: sudo ln -sf /usr/bin/clang-format-17 /usr/local/bin/clang-format
 
-     - name: Check formatting (uses project .clang-format, no modifications)
+      - name: Check formatting (uses project .clang-format, no modifications)
         run: |
           find src include examples tests \
             -type f \( -name '*.h' -o -name '*.hpp' -o -name '*.cpp' -o -name '*.c' \) \
@@ -138,12 +138,12 @@ jobs:
       contents: read
       pull-requests: read
     steps:
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: false
           fetch-depth: 0   # full history needed to enumerate PR commits
 
-     - name: Validate Conventional Commits format
+      - name: Validate Conventional Commits format
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
@@ -173,7 +173,7 @@ jobs:
     needs: [detect-release, format-check]
     if: always()
     steps:
-     - name: Verify all pre-checks passed
+      - name: Verify all pre-checks passed
         run: |
           FORMAT="${{ needs.format-check.result }}"
 
@@ -286,17 +286,17 @@ jobs:
       contents: read
 
     steps:
-     - name: Use HTTPS for GitHub (CI runners have no SSH key)
+      - name: Use HTTPS for GitHub (CI runners have no SSH key)
         run: git config --global url."https://github.com/".insteadOf "git@github.com:"
 
       # vnecmake submodule required; shader deps come from FetchContent (see build-linux-clang cache).
-     - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
       # Restore the Clang Release/static build cache written by build-linux-clang.
       # Same key as build-reusable.yml for linux-clang/Release/static.
-     - name: Restore CMake build cache (Clang)
+      - name: Restore CMake build cache (Clang)
         uses: actions/cache@v4
         with:
           path: build/static
@@ -306,11 +306,11 @@ jobs:
             build-linux-clang-Release-
             build-linux-clang-
 
-     - name: Install clang and clang-tidy
+      - name: Install clang and clang-tidy
         run: sudo apt-get update -qq && sudo apt-get install -y build-essential cmake clang clang-tidy
 
       # Reconfigure only if the cache was missing (compile_commands.json needed).
-     - name: Configure CMake (cache miss fallback)
+      - name: Configure CMake (cache miss fallback)
         run: |
           if [ ! -f build/static/compile_commands.json ]; then
             cmake -B build/static -S . \
@@ -322,12 +322,12 @@ jobs:
             cmake --build build/static --config Release --parallel
           fi
 
-     - name: Run clang-tidy
+      - name: Run clang-tidy
         run: |
           find src -type f \( -name '*.cpp' -o -name '*.h' \) -print0 \
             | xargs -0 -r clang-tidy -p build/static
 
-     - name: Write clang-tidy summary
+      - name: Write clang-tidy summary
         if: always()
         run: |
           echo "## clang-tidy" >> "$GITHUB_STEP_SUMMARY"
@@ -345,17 +345,17 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs:
-     - detect-release
-     - pre-checks-gate
-     - build-linux-gcc
-     - build-linux-clang
-     - build-linux-asan
-     - build-macos
-     - build-windows
-     - clang-tidy
+      - detect-release
+      - pre-checks-gate
+      - build-linux-gcc
+      - build-linux-clang
+      - build-linux-asan
+      - build-macos
+      - build-windows
+      - clang-tidy
 
     steps:
-     - name: Check all required jobs passed
+      - name: Check all required jobs passed
         run: |
           RESULTS=(
             "pre-checks-gate=${{ needs.pre-checks-gate.result }}"
@@ -380,7 +380,7 @@ jobs:
           fi
           echo "All CI jobs passed."
 
-     - name: Write pipeline summary
+      - name: Write pipeline summary
         if: always()
         run: |
           echo "# CI Pipeline Summary" >> "$GITHUB_STEP_SUMMARY"

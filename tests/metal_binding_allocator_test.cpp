@@ -70,12 +70,16 @@ TEST(MetalBindingAllocatorTest, ProgramWideUnionIsDenseAndConsistent) {
 }
 
 TEST(MetalBindingAllocatorTest, OverflowReportsSamplerLimit) {
-    // 17 separate samplers in set 0 will overflow Metal's 16-sampler table.
+    // Mix combined image-samplers and separate samplers so reserved texture-pinned
+    // sampler indices and gap-filled separate indices together exceed Metal's 16.
     std::string src = "#version 450\nlayout(location=0) out vec4 o;\n";
-    for (int i = 0; i < 17; ++i) {
+    for (int i = 0; i < 8; ++i) {
+        src += "layout(set=0, binding=" + std::to_string(i) + ") uniform sampler2D t" + std::to_string(i) + ";\n";
+    }
+    for (int i = 8; i < 18; ++i) {
         src += "layout(set=0, binding=" + std::to_string(i) + ") uniform sampler s" + std::to_string(i) + ";\n";
     }
-    src += "void main(){ o = vec4(1.0); }\n";
+    src += "void main(){ o = texture(t0, vec2(0.0)) + vec4(1.0); }\n";
 
     auto spirv = compileGlsl(src.c_str(), ShaderStage::eFragment);
     ASSERT_FALSE(spirv.empty());

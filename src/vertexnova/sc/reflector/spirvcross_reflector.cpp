@@ -116,9 +116,10 @@ void appendBinding(const spirv_cross::Compiler& compiler,
             } else if constexpr (Type == ReflectedResourceType::eCombinedImageSampler) {
                 metal.texture = metal_map->texture(set, binding);
                 metal.sampler = metal_map->sampler(set, binding);
-            } else {
+            } else if constexpr (Type == ReflectedResourceType::eSampledImage
+                                 || Type == ReflectedResourceType::eStorageImage
+                                 || Type == ReflectedResourceType::eSampledCubemap) {
                 metal.texture = metal_map->texture(set, binding);
-                metal.sampler = metal_map->sampler(set, binding);
             }
         }
         slots.metal = metal;
