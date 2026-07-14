@@ -317,8 +317,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Release \
               -DCMAKE_C_COMPILER=clang \
               -DCMAKE_CXX_COMPILER=clang++ \
-              -DVNE_TEMPLATE_CI=ON \
-              -DVNE_TEMPLATE_LIB_TYPE=static \
+              -DVNE_SC_CI=ON \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
             cmake --build build/static --config Release --parallel
           fi

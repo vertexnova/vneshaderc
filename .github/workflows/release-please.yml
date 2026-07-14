@@ -76,10 +76,10 @@ jobs:
   # was merged in this run (release-please then creates the tag + GitHub Release).
   #
   # Produces 3 tarballs per release (Release build only):
-  #   vnetemplate-vX.Y.Z-{platform}.tar.gz
+  #   vnesc-vX.Y.Z-{platform}.tar.gz
   #
-  # Contents: one library per build in lib/ (static or shared via VNE_TEMPLATE_LIB_TYPE;
-  #           e.g. libvnetemplate.so or libvnetemplate.a on Unix), include/vertexnova/template/
+  # Contents: static libs under lib/ (libvnesc.a, libvnesc_spirvcross.a, ...),
+  #           include/vertexnova/sc/, and CLI tools under bin/ when built.
   # --------------------------------------------------------------------
   publish:
     name: "Release / publish (${{ matrix.platform }})"
@@ -128,10 +128,12 @@ jobs:
           if [[ -n "${{ matrix.c }}" ]]; then
             COMPILER_FLAGS="-DCMAKE_C_COMPILER=${{ matrix.c }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp }}"
           fi
+          # shellcheck disable=SC2086
           cmake -B build/static -S . \
             -DCMAKE_BUILD_TYPE=Release \
-            -DVNE_TEMPLATE_CI=ON \
-            -DVNE_TEMPLATE_LIB_TYPE=static \
+            -DVNE_SC_TESTS=OFF \
+            -DVNE_SC_EXAMPLES=OFF \
+            -DVNE_SC_TOOLS=ON \
             -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}/install" \
             $COMPILER_FLAGS
 
@@ -141,16 +143,37 @@ jobs:
 
      - name: Install to staging directory
         shell: bash
-        run: cmake --install build/static --config Release --component vnetemplate
+        run: |
+          # Install library + headers (vnesc) and CLI tools (vnesc_tools).
+          cmake --install build/static --config Release --component vnesc
+          cmake --install build/static --config Release --component vnesc_tools
+
+     - name: Verify install layout
+        shell: bash
+        run: |
+          PREFIX="${{ github.workspace }}/install"
+          if [[ ! -d "$PREFIX/include/vertexnova/sc" ]]; then
+            echo "::error::Expected $PREFIX/include/vertexnova/sc missing after cmake --install."
+            ls -la "$PREFIX" || true
+            exit 1
+          fi
+          if [[ ! -d "$PREFIX/lib" ]] && [[ ! -d "$PREFIX/lib64" ]]; then
+            echo "::error::Expected lib/ or lib64/ under $PREFIX missing."
+            ls -laR "$PREFIX" || true
+            exit 1
+          fi
+          echo "Install layout OK:"
+          find "$PREFIX" -maxdepth 3 -type f | head -40
 
      - name: Package artifact
         shell: bash
         run: |
-          ARTIFACT="vnetemplate-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
+          ARTIFACT="vnesc-v${{ needs.release-please.outputs.version }}-${{ matrix.platform }}.tar.gz"
           # -C changes into the install dir so tar sees only its contents (no path prefix).
           # The output path is relative to CWD (repo root) - avoids Windows drive-letter issues.
           tar -czf "${ARTIFACT}" -C "${{ github.workspace }}/install" .
           echo "ARTIFACT=${ARTIFACT}" >> "$GITHUB_ENV"
+          echo "Published: ${ARTIFACT}"
 
      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2

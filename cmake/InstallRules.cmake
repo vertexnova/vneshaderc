@@ -18,13 +18,13 @@ include(GNUInstallDirs)
 #                              Library Targets                                 #
 #==============================================================================
 
+# Install compiled archives only. INTERFACE targets (vnesc_interface,
+# VnescWarnings, VnescBuildSettings) have no binary artifact and need an
+# install(EXPORT) set; headers are installed via the DIRECTORY rule below.
 set(_vnesc_install_targets
     vnesc
-    vnesc_interface
     vnesc_spirvcross
-    vnesc_validator
-    VnescWarnings
-    VnescBuildSettings)
+    vnesc_validator)
 
 if(VNE_SC_GLSLANG AND TARGET vnesc_glslang)
     list(APPEND _vnesc_install_targets vnesc_glslang)
