@@ -96,11 +96,11 @@ Apply this section when the PR changes files under `tests/` or `*_test.cpp`.
 - If mocking: keep mocks minimal and verify behavior, not implementation details.
 - Ensure tests run fast and don't require special hardware unless explicitly marked.
 
-## This repository (VneTemplate)
+## This repository (vnesc)
 
-### Project layout
+### Project layout (vertexnova/sc)
 
-- Library: **src/vertexnova/template/** - Public API: **include/vertexnova/template/** - Tests: **tests/** - Examples: **examples/**
+- Library: **src/vertexnova/sc/** - Public API: **include/vertexnova/sc/** - Tests: **tests/** - Examples: **examples/**
 - Dependencies: **deps/internal/** (e.g. vnecommon, vnelogging), **deps/external/** (e.g. googletest). No top-level `external/` or `libs/`.
 
 ### Formatting and static analysis
