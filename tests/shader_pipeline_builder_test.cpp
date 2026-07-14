@@ -223,10 +223,7 @@ TEST_F(ShaderPipelineBuilderTest, WgslLeavesVulkanSetBindingIdentity) {
     desc.stages.push_back(makeVertexRequest());
 
     auto result = builder->build(desc);
-    // WGSL may be non-fatal missing; if reflection ran, set/binding stay canonical.
-    if (!result.ok()) {
-        GTEST_SKIP() << "WGSL path unavailable: " << result.error;
-    }
+    ASSERT_TRUE(result.ok()) << result.error;
     const auto* vs = result.artifact.findStage(ShaderStage::eVertex);
     ASSERT_NE(vs, nullptr);
     ASSERT_FALSE(vs->reflection.bindings.empty());
