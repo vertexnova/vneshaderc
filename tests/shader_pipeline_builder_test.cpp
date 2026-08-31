@@ -231,4 +231,24 @@ TEST_F(ShaderPipelineBuilderTest, WgslLeavesVulkanSetBindingIdentity) {
     EXPECT_EQ(vs->reflection.bindings[0].binding, 0u);
 }
 
+TEST_F(ShaderPipelineBuilderTest, WgslTargetFailsWhenTintUnavailable) {
+#ifndef VNE_SC_TINT_ENABLED
+    auto builder = makeGlslPipelineBuilder();
+    ASSERT_NE(builder, nullptr);
+
+    PipelineBuildDesc desc;
+    desc.name = "wgsl_unavailable";
+    desc.validate = false;
+    desc.use_cache = false;
+    desc.targets = {CrossTarget::eWGSL};
+    desc.stages.push_back(makeVertexRequest());
+
+    auto result = builder->build(desc);
+    EXPECT_FALSE(result.ok());
+    EXPECT_EQ(result.code, ResultCode::eUnavailable);
+#else
+    GTEST_SKIP() << "Tint is enabled; unavailable path not exercised";
+#endif
+}
+
 }  // namespace vne::sc::test

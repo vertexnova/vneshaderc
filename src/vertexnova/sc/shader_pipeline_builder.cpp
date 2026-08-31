@@ -189,7 +189,10 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
             if (rr.ok()) {
                 sw.artifact.reflection = std::move(rr.reflection);
             } else {
-                VNE_LOG_WARN << "ShaderPipelineBuilder: reflection failed (non-fatal): " << rr.error;
+                result.code = rr.code;
+                result.error = "ShaderPipelineBuilder: reflection failed: " + rr.error;
+                VNE_LOG_ERROR << result.error;
+                return result;
             }
         }
 
@@ -220,15 +223,11 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                     cc.entry_point = std::move(ccres.entry_point);
                     sw.artifact.cross_compiled.push_back(std::move(cc));
                 } else {
-                    if (target == CrossTarget::eWGSL) {
-                        VNE_LOG_WARN << "ShaderPipelineBuilder: WGSL cross-compile failed (non-fatal): " << ccres.error;
-                    } else {
-                        result.code = ccres.code;
-                        result.error = "ShaderPipelineBuilder: cross-compile to target "
-                                       + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
-                        VNE_LOG_ERROR << result.error;
-                        return result;
-                    }
+                    result.code = ccres.code;
+                    result.error = "ShaderPipelineBuilder: cross-compile to target "
+                                   + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
+                    VNE_LOG_ERROR << result.error;
+                    return result;
                 }
             }
         }
