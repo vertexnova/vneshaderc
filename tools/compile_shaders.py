@@ -39,6 +39,8 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 
 _BUNDLE_MAGIC = b"VNSH"
+# bundle.header format version. Independent of reflection.bin's own version
+# (see shader_reflection_binary.cpp) -- the two are bumped separately.
 _BUNDLE_VERSION = 2
 
 

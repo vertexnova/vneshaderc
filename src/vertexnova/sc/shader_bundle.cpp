@@ -245,6 +245,14 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                 return "combined_image_sampler";
             case ReflectedResourceType::eSampledCubemap:
                 return "sampled_cubemap";
+            case ReflectedResourceType::eSampled2DArray:
+                return "sampled_2d_array";
+            case ReflectedResourceType::eSampledCubeArray:
+                return "sampled_cube_array";
+            case ReflectedResourceType::eReadOnlyStorageBuffer:
+                return "readonly_storage_buffer";
+            case ReflectedResourceType::eSampledImage3D:
+                return "sampled_image_3d";
         }
         return "unknown";
     };

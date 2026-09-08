@@ -15,7 +15,17 @@
 
 namespace {
 
-constexpr uint32_t kReflectionBinaryVersion = 2u;  // bumped: BackendSlot -> ResourceBackendSlots
+// reflection.bin format version, v1.0.0, packed into the single u32 the header already
+// carries: 0xMMmmpp (major, minor, patch). Readers require an exact match -- a stale bundle
+// fails loudly and is regenerated rather than silently half-read.
+// Keep in lockstep with vnerhi's shader_bundle_loader.cpp.
+// (Independent of bundle.header's own version -- see shader_bundle.cpp.)
+constexpr uint32_t kReflectionBinaryVersionMajor = 1u;
+constexpr uint32_t kReflectionBinaryVersionMinor = 0u;
+constexpr uint32_t kReflectionBinaryVersionPatch = 0u;
+constexpr uint32_t kReflectionBinaryVersion = (kReflectionBinaryVersionMajor << 16U)
+                                              | (kReflectionBinaryVersionMinor << 8U)
+                                              | kReflectionBinaryVersionPatch;
 constexpr uint32_t kMaxStringLen = 4096;
 constexpr uint32_t kMaxProgramStageCount = 16;
 constexpr uint32_t kMaxBindingCount = 256;
@@ -226,6 +236,12 @@ void writeReflectedBindingInfo(Writer& w, const vne::sc::ReflectedBindingInfo& b
     for (const auto& m : b.struct_members) {
         writeReflectedStructMember(w, m);
     }
+    // ---- v3 ----
+    w.str(b.storage_format_hint);
+    w.str(b.storage_access_hint);
+    w.boolean(b.multisampled);
+    w.boolean(b.depth_texture);
+    w.boolean(b.dynamic_offset);
 }
 
 bool readReflectedBindingInfo(Reader& r, vne::sc::ReflectedBindingInfo& b) {
@@ -254,6 +270,11 @@ bool readReflectedBindingInfo(Reader& r, vne::sc::ReflectedBindingInfo& b) {
             return false;
         }
     }
+    b.storage_format_hint = r.str();
+    b.storage_access_hint = r.str();
+    b.multisampled = r.boolean();
+    b.depth_texture = r.boolean();
+    b.dynamic_offset = r.boolean();
     return r.ok();
 }
 

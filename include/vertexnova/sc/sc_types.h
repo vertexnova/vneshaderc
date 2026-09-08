@@ -185,6 +185,10 @@ struct ResourceBackendSlots {
 };
 
 /// Classifies a reflected shader resource.
+///
+/// @note Values must stay numerically identical to `vne::rhi::ReflectedResourceType`
+/// (vnerhi/include/vertexnova/rhi/shader_reflection.h). `reflection.bin` stores the raw
+/// value and vnerhi casts it straight across.
 enum class ReflectedResourceType : uint8_t {
     eUniformBuffer = 0,
     eStorageBuffer = 1,
@@ -194,6 +198,10 @@ enum class ReflectedResourceType : uint8_t {
     ePushConstant = 5,
     eCombinedImageSampler = 6,
     eSampledCubemap = 7,
+    eSampled2DArray = 8,           ///< texture2DArray / texture_2d_array<f32>
+    eSampledCubeArray = 9,         ///< textureCubeArray / texture_cube_array<f32>
+    eReadOnlyStorageBuffer = 10,   ///< SSBO declared readonly (WGSL `storage, read`)
+    eSampledImage3D = 11,          ///< texture3D / texture_3d<f32>
 };
 
 /// A single member of a reflected struct (e.g. a field inside a uniform block).
@@ -219,6 +227,18 @@ struct ReflectedBindingInfo {
     ShaderStageFlags stages = ShaderStageFlags::eNone;
     ResourceBackendSlots slots;
     std::vector<ReflectedStructMember> struct_members;  ///< Non-empty for buffer types.
+
+    // ----- Fields WebGPU needs to build a bind-group layout (reflection.bin v3) -----
+    /// Storage-texture format, e.g. "rgba16float". Empty for non-storage-image bindings.
+    std::string storage_format_hint;
+    /// Storage-texture access: "read", "write", or "read_write". Empty when not applicable.
+    std::string storage_access_hint;
+    /// True for multisampled textures (`texture2DMS`, WGSL `texture_multisampled_2d`).
+    bool multisampled = false;
+    /// True for depth textures (WGSL `texture_depth_2d` and friends) -- drives the sample type.
+    bool depth_texture = false;
+    /// The buffer is re-offset per draw. Not derivable from SPIR-V; set by tooling/renderer.
+    bool dynamic_offset = false;
 };
 
 /// Workgroup size for compute shaders.
