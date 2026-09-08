@@ -23,9 +23,8 @@ namespace {
 constexpr uint32_t kReflectionBinaryVersionMajor = 1u;
 constexpr uint32_t kReflectionBinaryVersionMinor = 0u;
 constexpr uint32_t kReflectionBinaryVersionPatch = 0u;
-constexpr uint32_t kReflectionBinaryVersion = (kReflectionBinaryVersionMajor << 16U)
-                                              | (kReflectionBinaryVersionMinor << 8U)
-                                              | kReflectionBinaryVersionPatch;
+constexpr uint32_t kReflectionBinaryVersion =
+    (kReflectionBinaryVersionMajor << 16U) | (kReflectionBinaryVersionMinor << 8U) | kReflectionBinaryVersionPatch;
 constexpr uint32_t kMaxStringLen = 4096;
 constexpr uint32_t kMaxProgramStageCount = 16;
 constexpr uint32_t kMaxBindingCount = 256;

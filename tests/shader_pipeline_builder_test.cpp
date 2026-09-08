@@ -212,6 +212,10 @@ TEST_F(ShaderPipelineBuilderTest, MultiSetMetalSlotsAgreeAcrossStages) {
 }
 
 TEST_F(ShaderPipelineBuilderTest, WgslLeavesVulkanSetBindingIdentity) {
+#ifndef VNE_SC_TINT_ENABLED
+    GTEST_SKIP() << "Tint not enabled (configure with -DVNE_SC_TINT=ON)";
+#endif
+
     auto builder = makeGlslPipelineBuilder();
     ASSERT_NE(builder, nullptr);
 

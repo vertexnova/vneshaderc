@@ -198,10 +198,10 @@ enum class ReflectedResourceType : uint8_t {
     ePushConstant = 5,
     eCombinedImageSampler = 6,
     eSampledCubemap = 7,
-    eSampled2DArray = 8,           ///< texture2DArray / texture_2d_array<f32>
-    eSampledCubeArray = 9,         ///< textureCubeArray / texture_cube_array<f32>
-    eReadOnlyStorageBuffer = 10,   ///< SSBO declared readonly (WGSL `storage, read`)
-    eSampledImage3D = 11,          ///< texture3D / texture_3d<f32>
+    eSampled2DArray = 8,          ///< texture2DArray / texture_2d_array<f32>
+    eSampledCubeArray = 9,        ///< textureCubeArray / texture_cube_array<f32>
+    eReadOnlyStorageBuffer = 10,  ///< SSBO declared readonly (WGSL `storage, read`)
+    eSampledImage3D = 11,         ///< texture3D / texture_3d<f32>
 };
 
 /// A single member of a reflected struct (e.g. a field inside a uniform block).

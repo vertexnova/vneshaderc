@@ -72,7 +72,8 @@ struct PipelineBuildResult {
  * Per stage the pipeline is:
  *  -# Cache lookup (key includes a source-level program fingerprint for MSL dense maps).
  *  -# On miss: @ref IShaderFrontEnd::compile, optional validate, reflect, cross-compile, store.
- *  -# On hit: reuse the cached @ref StageArtifact (no front-end compile).
+ *  -# On hit: reuse the cached @ref StageArtifact when it covers every requested
+ *     target (no front-end compile); incomplete entries are rebuilt.
  *
  * When any stage misses and MSL dense program maps are enabled, one shared
  * @ref MetalBindingAllocator is built from the union of all stage SPIR-V

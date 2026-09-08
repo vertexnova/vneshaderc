@@ -30,6 +30,9 @@ namespace {
 constexpr uint64_t kFnv1a64Prime = 0x100000001b3ULL;
 constexpr uint64_t kFnv1a64Offset = 0xcbf29ce484222325ULL;
 constexpr int kCacheKeyHexWidth = 16;
+// Bumped when failure policy became fatal for reflection / cross-compile so
+// stale incomplete .vnca entries are not treated as hits.
+constexpr uint32_t kArtifactCacheSchemaVersion = 1;
 
 uint64_t fnv1a64(const void* data, size_t len) noexcept {
     uint64_t hash = kFnv1a64Offset;
@@ -92,11 +95,12 @@ struct Reader {
 };
 
 // StageArtifact binary format
-// stage(u8) | entry_point(str) | spirv_count(u32) | spirv_data |
+// schema(u32) | stage(u8) | entry_point(str) | spirv_count(u32) | spirv_data |
 // StageReflection | cross_count(u32) | { target(u8) | source(str) | ep(str) } * N
 
 std::string serializeArtifact(const StageArtifact& a) {
     Writer w;
+    w.u32(kArtifactCacheSchemaVersion);
     w.u8(static_cast<uint8_t>(a.stage));
     w.str(a.entry_point);
     w.u32(static_cast<uint32_t>(a.spirv.size()));
@@ -118,6 +122,10 @@ std::string serializeArtifact(const StageArtifact& a) {
 bool deserializeArtifact(const std::string& data, StageArtifact& out) {
     try {
         Reader r(data);
+        const uint32_t schema = r.u32();
+        if (schema != kArtifactCacheSchemaVersion) {
+            return false;
+        }
         out.stage = static_cast<ShaderStage>(r.u8());
         out.entry_point = r.str();
         const uint32_t spirv_count = r.u32();

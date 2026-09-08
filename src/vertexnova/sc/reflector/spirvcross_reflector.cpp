@@ -60,24 +60,42 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
 // Maps a SPIR-V image format to the WGSL storage-texture format name WebGPU expects.
 [[nodiscard]] std::string imageFormatName(spv::ImageFormat fmt) {
     switch (fmt) {
-        case spv::ImageFormatRgba32f:    return "rgba32float";
-        case spv::ImageFormatRgba16f:    return "rgba16float";
-        case spv::ImageFormatR32f:       return "r32float";
-        case spv::ImageFormatRgba8:      return "rgba8unorm";
-        case spv::ImageFormatRgba8Snorm: return "rgba8snorm";
-        case spv::ImageFormatRg32f:      return "rg32float";
-        case spv::ImageFormatRg16f:      return "rg16float";
-        case spv::ImageFormatRgba32i:    return "rgba32sint";
-        case spv::ImageFormatRgba16i:    return "rgba16sint";
-        case spv::ImageFormatRgba8i:     return "rgba8sint";
-        case spv::ImageFormatR32i:       return "r32sint";
-        case spv::ImageFormatRgba32ui:   return "rgba32uint";
-        case spv::ImageFormatRgba16ui:   return "rgba16uint";
-        case spv::ImageFormatRgba8ui:    return "rgba8uint";
-        case spv::ImageFormatR32ui:      return "r32uint";
-        case spv::ImageFormatRg32i:      return "rg32sint";
-        case spv::ImageFormatRg32ui:     return "rg32uint";
-        default:                         return {};
+        case spv::ImageFormatRgba32f:
+            return "rgba32float";
+        case spv::ImageFormatRgba16f:
+            return "rgba16float";
+        case spv::ImageFormatR32f:
+            return "r32float";
+        case spv::ImageFormatRgba8:
+            return "rgba8unorm";
+        case spv::ImageFormatRgba8Snorm:
+            return "rgba8snorm";
+        case spv::ImageFormatRg32f:
+            return "rg32float";
+        case spv::ImageFormatRg16f:
+            return "rg16float";
+        case spv::ImageFormatRgba32i:
+            return "rgba32sint";
+        case spv::ImageFormatRgba16i:
+            return "rgba16sint";
+        case spv::ImageFormatRgba8i:
+            return "rgba8sint";
+        case spv::ImageFormatR32i:
+            return "r32sint";
+        case spv::ImageFormatRgba32ui:
+            return "rgba32uint";
+        case spv::ImageFormatRgba16ui:
+            return "rgba16uint";
+        case spv::ImageFormatRgba8ui:
+            return "rgba8uint";
+        case spv::ImageFormatR32ui:
+            return "r32uint";
+        case spv::ImageFormatRg32i:
+            return "rg32sint";
+        case spv::ImageFormatRg32ui:
+            return "rg32uint";
+        default:
+            return {};
     }
 }
 
@@ -113,8 +131,8 @@ void appendBinding(const spirv_cross::Compiler& compiler,
         const bool arrayed = ty.image.arrayed;
         switch (ty.image.dim) {
             case spv::DimCube:
-                actual_type = arrayed ? ReflectedResourceType::eSampledCubeArray
-                                      : ReflectedResourceType::eSampledCubemap;
+                actual_type =
+                    arrayed ? ReflectedResourceType::eSampledCubeArray : ReflectedResourceType::eSampledCubemap;
                 break;
             case spv::Dim3D:
                 actual_type = ReflectedResourceType::eSampledImage3D;
