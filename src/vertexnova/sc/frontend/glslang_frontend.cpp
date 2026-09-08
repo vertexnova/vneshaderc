@@ -28,7 +28,7 @@ namespace {
 
 constexpr std::streamsize kMaxShaderFileBytes = 64 * 1024 * 1024;
 
-struct GlslangProcessLifetime {
+struct GlslangProcessGuard {
     std::mutex mutex;
     int refs = 0;
     bool process_ok = false;
@@ -57,9 +57,9 @@ struct GlslangProcessLifetime {
     }
 };
 
-GlslangProcessLifetime& glslangProcessLifetime() {
-    static GlslangProcessLifetime s_lifetime;
-    return s_lifetime;
+GlslangProcessGuard& glslangProcessGuard() {
+    static GlslangProcessGuard s_guard;
+    return s_guard;
 }
 
 bool readBinaryFile(std::ifstream& file, std::string& out) {
@@ -183,7 +183,7 @@ std::string buildPreamble(const std::vector<vne::sc::ShaderMacro>& macros) {
 namespace vne::sc {
 
 GlslangFrontEnd::GlslangFrontEnd()
-    : initialized_(glslangProcessLifetime().acquire()) {
+    : initialized_(glslangProcessGuard().acquire()) {
     if (!initialized_) {
         VNE_LOG_ERROR << "GlslangFrontEnd: glslang::InitializeProcess() failed";
     } else {
@@ -193,7 +193,7 @@ GlslangFrontEnd::GlslangFrontEnd()
 
 GlslangFrontEnd::~GlslangFrontEnd() {
     if (initialized_) {
-        glslangProcessLifetime().release();
+        glslangProcessGuard().release();
         initialized_ = false;
     }
 }
