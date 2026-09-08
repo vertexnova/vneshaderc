@@ -15,12 +15,14 @@
 
 namespace {
 
-// reflection.bin format version, v1.0.0, packed into the single u32 the header already
+// reflection.bin format version, v3.0.0, packed into the single u32 the header already
 // carries: 0xMMmmpp (major, minor, patch). Readers require an exact match -- a stale bundle
 // fails loudly and is regenerated rather than silently half-read.
+// v3 adds WebGPU bind-group fields on each binding: storage_format_hint,
+// storage_access_hint, multisampled, depth_texture, dynamic_offset.
 // Keep in lockstep with vnerhi's shader_bundle_loader.cpp.
 // (Independent of bundle.header's own version -- see shader_bundle.cpp.)
-constexpr uint32_t kReflectionBinaryVersionMajor = 1u;
+constexpr uint32_t kReflectionBinaryVersionMajor = 3u;
 constexpr uint32_t kReflectionBinaryVersionMinor = 0u;
 constexpr uint32_t kReflectionBinaryVersionPatch = 0u;
 constexpr uint32_t kReflectionBinaryVersion =
@@ -235,7 +237,7 @@ void writeReflectedBindingInfo(Writer& w, const vne::sc::ReflectedBindingInfo& b
     for (const auto& m : b.struct_members) {
         writeReflectedStructMember(w, m);
     }
-    // ---- v3 ----
+    // ---- reflection.bin v3 WebGPU bind-group fields ----
     w.str(b.storage_format_hint);
     w.str(b.storage_access_hint);
     w.boolean(b.multisampled);
@@ -269,6 +271,7 @@ bool readReflectedBindingInfo(Reader& r, vne::sc::ReflectedBindingInfo& b) {
             return false;
         }
     }
+    // ---- reflection.bin v3 WebGPU bind-group fields (required; version gate is exact) ----
     b.storage_format_hint = r.str();
     b.storage_access_hint = r.str();
     b.multisampled = r.boolean();

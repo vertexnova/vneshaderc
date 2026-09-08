@@ -13,6 +13,12 @@
 /**
  * @file shader_reflection_binary.h
  * @brief Binary serialization for @ref StageReflection and @ref ProgramReflection.
+ *
+ * @c ProgramReflection blobs (@c reflection.bin) use format version 3.0.0
+ * (@c 0x00030000). Deserialization requires an exact version match; regenerate
+ * stale bundles. Version 3 stores the WebGPU bind-group fields on each binding
+ * (@c storage_format_hint, @c storage_access_hint, @c multisampled,
+ * @c depth_texture, @c dynamic_offset).
  */
 
 #include "sc_types.h"

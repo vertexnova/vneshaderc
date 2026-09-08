@@ -280,6 +280,7 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                 switch (b.type) {
                     case ReflectedResourceType::eUniformBuffer:
                     case ReflectedResourceType::eStorageBuffer:
+                    case ReflectedResourceType::eReadOnlyStorageBuffer:
                         jm["buffer"] = b.slots.metal->buffer;
                         break;
                     case ReflectedResourceType::eCombinedImageSampler:
@@ -288,6 +289,9 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                         break;
                     case ReflectedResourceType::eSampledImage:
                     case ReflectedResourceType::eSampledCubemap:
+                    case ReflectedResourceType::eSampled2DArray:
+                    case ReflectedResourceType::eSampledCubeArray:
+                    case ReflectedResourceType::eSampledImage3D:
                     case ReflectedResourceType::eStorageImage:
                         jm["texture"] = b.slots.metal->texture;
                         break;

@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -58,6 +59,7 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
 }
 
 // Maps a SPIR-V image format to the WGSL storage-texture format name WebGPU expects.
+// Throws on Unknown / unsupported formats so storage_format_hint is never empty.
 [[nodiscard]] std::string imageFormatName(spv::ImageFormat fmt) {
     switch (fmt) {
         case spv::ImageFormatRgba32f:
@@ -66,6 +68,8 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
             return "rgba16float";
         case spv::ImageFormatR32f:
             return "r32float";
+        case spv::ImageFormatR16f:
+            return "r16float";
         case spv::ImageFormatRgba8:
             return "rgba8unorm";
         case spv::ImageFormatRgba8Snorm:
@@ -82,6 +86,14 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
             return "rgba8sint";
         case spv::ImageFormatR32i:
             return "r32sint";
+        case spv::ImageFormatRg32i:
+            return "rg32sint";
+        case spv::ImageFormatRg16i:
+            return "rg16sint";
+        case spv::ImageFormatR16i:
+            return "r16sint";
+        case spv::ImageFormatR8i:
+            return "r8sint";
         case spv::ImageFormatRgba32ui:
             return "rgba32uint";
         case spv::ImageFormatRgba16ui:
@@ -90,12 +102,29 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
             return "rgba8uint";
         case spv::ImageFormatR32ui:
             return "r32uint";
-        case spv::ImageFormatRg32i:
-            return "rg32sint";
         case spv::ImageFormatRg32ui:
             return "rg32uint";
+        case spv::ImageFormatRg16ui:
+            return "rg16uint";
+        case spv::ImageFormatR16ui:
+            return "r16uint";
+        case spv::ImageFormatR8ui:
+            return "r8uint";
+        case spv::ImageFormatR8:
+            return "r8unorm";
+        case spv::ImageFormatRg8:
+            return "rg8unorm";
+        case spv::ImageFormatR8Snorm:
+            return "r8snorm";
+        case spv::ImageFormatRg8Snorm:
+            return "rg8snorm";
+        case spv::ImageFormatRg8i:
+            return "rg8sint";
+        case spv::ImageFormatRg8ui:
+            return "rg8uint";
         default:
-            return {};
+            throw std::runtime_error("SpirvCrossReflector: unsupported SPIR-V storage-image format ("
+                                     + std::to_string(static_cast<int>(fmt)) + ")");
     }
 }
 
