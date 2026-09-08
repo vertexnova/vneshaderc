@@ -245,8 +245,8 @@ std::string emitSingleBinding(const ReflectedBindingInfo& binding) {
             out << "} " << blockNameToInstance(binding.name) << ";\n\n";
             break;
         case ReflectedResourceType::eReadOnlyStorageBuffer:
-            out << "layout(std430, set = " << binding.set << ", binding = " << binding.binding
-                << ") readonly buffer " << binding.name << " {\n";
+            out << "layout(std430, set = " << binding.set << ", binding = " << binding.binding << ") readonly buffer "
+                << binding.name << " {\n";
             if (binding.struct_members.empty()) {
                 out << "    float data[];\n";
             } else {
@@ -265,16 +265,16 @@ std::string emitSingleBinding(const ReflectedBindingInfo& binding) {
                 << binding.name << ";\n\n";
             break;
         case ReflectedResourceType::eSampled2DArray:
-            out << "layout(set = " << binding.set << ", binding = " << binding.binding
-                << ") uniform texture2DArray " << binding.name << ";\n\n";
+            out << "layout(set = " << binding.set << ", binding = " << binding.binding << ") uniform texture2DArray "
+                << binding.name << ";\n\n";
             break;
         case ReflectedResourceType::eSampledCubemap:
             out << "layout(set = " << binding.set << ", binding = " << binding.binding << ") uniform textureCube "
                 << binding.name << ";\n\n";
             break;
         case ReflectedResourceType::eSampledCubeArray:
-            out << "layout(set = " << binding.set << ", binding = " << binding.binding
-                << ") uniform textureCubeArray " << binding.name << ";\n\n";
+            out << "layout(set = " << binding.set << ", binding = " << binding.binding << ") uniform textureCubeArray "
+                << binding.name << ";\n\n";
             break;
         case ReflectedResourceType::eSampledImage3D:
             out << "layout(set = " << binding.set << ", binding = " << binding.binding << ") uniform texture3D "
