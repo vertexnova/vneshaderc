@@ -267,12 +267,17 @@ if(VNE_SC_TINT)
     # library that has negligible benefit from debug symbols.
     set(_vne_sc_saved_build_type "${CMAKE_BUILD_TYPE}")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+    # Pin is fixed (chromium/6723). Skip ExternalProject update on reconfigure:
+    # modern Git defaults to fetch.recurseSubmodules=on-demand, and Dawn's
+    # DAWN_FETCH_DEPENDENCIES checkouts often lack an `origin` remote, so a
+    # plain `git fetch` on dawn-src fails mid-configure.
     FetchContent_Declare(dawn
-        GIT_REPOSITORY       https://dawn.googlesource.com/dawn
-        GIT_TAG              chromium/6723
-        GIT_SHALLOW          TRUE
-        GIT_SUBMODULES       ""
-        GIT_SUBMODULES_RECURSE FALSE)
+        GIT_REPOSITORY         https://dawn.googlesource.com/dawn
+        GIT_TAG                chromium/6723
+        GIT_SHALLOW            TRUE
+        GIT_SUBMODULES         ""
+        GIT_SUBMODULES_RECURSE FALSE
+        UPDATE_DISCONNECTED    TRUE)
     FetchContent_MakeAvailable(dawn)
     _vne_sc_fix_dawn_abseil_randen_copts()
     set(CMAKE_BUILD_TYPE "${_vne_sc_saved_build_type}" CACHE STRING "" FORCE)
