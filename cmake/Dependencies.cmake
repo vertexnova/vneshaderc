@@ -315,6 +315,11 @@ function(vne_sc_link_tint target)
         message(FATAL_ERROR "vne_sc_link_tint: no libtint or tint target found from Dawn")
     endif()
     target_compile_definitions(${target} PRIVATE VNE_SC_TINT_ENABLED)
+    # Tint BlockAllocator uses alignas; MSVC C4324 (structure padded) is expected
+    # and must not fail WARNINGS_AS_ERRORS=/WX when compiling our Tint wrappers.
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /wd4324)
+    endif()
 endfunction()
 
 #==============================================================================
