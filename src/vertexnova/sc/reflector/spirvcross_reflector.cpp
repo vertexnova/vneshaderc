@@ -22,6 +22,7 @@
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -57,6 +58,76 @@ std::vector<vne::sc::ReflectedStructMember> reflectStructMembers(const spirv_cro
     return members;
 }
 
+// Maps a SPIR-V image format to the WGSL storage-texture format name WebGPU expects.
+// Throws on Unknown / unsupported formats so storage_format_hint is never empty.
+[[nodiscard]] std::string imageFormatName(spv::ImageFormat fmt) {
+    switch (fmt) {
+        case spv::ImageFormatRgba32f:
+            return "rgba32float";
+        case spv::ImageFormatRgba16f:
+            return "rgba16float";
+        case spv::ImageFormatR32f:
+            return "r32float";
+        case spv::ImageFormatR16f:
+            return "r16float";
+        case spv::ImageFormatRgba8:
+            return "rgba8unorm";
+        case spv::ImageFormatRgba8Snorm:
+            return "rgba8snorm";
+        case spv::ImageFormatRg32f:
+            return "rg32float";
+        case spv::ImageFormatRg16f:
+            return "rg16float";
+        case spv::ImageFormatRgba32i:
+            return "rgba32sint";
+        case spv::ImageFormatRgba16i:
+            return "rgba16sint";
+        case spv::ImageFormatRgba8i:
+            return "rgba8sint";
+        case spv::ImageFormatR32i:
+            return "r32sint";
+        case spv::ImageFormatRg32i:
+            return "rg32sint";
+        case spv::ImageFormatRg16i:
+            return "rg16sint";
+        case spv::ImageFormatR16i:
+            return "r16sint";
+        case spv::ImageFormatR8i:
+            return "r8sint";
+        case spv::ImageFormatRgba32ui:
+            return "rgba32uint";
+        case spv::ImageFormatRgba16ui:
+            return "rgba16uint";
+        case spv::ImageFormatRgba8ui:
+            return "rgba8uint";
+        case spv::ImageFormatR32ui:
+            return "r32uint";
+        case spv::ImageFormatRg32ui:
+            return "rg32uint";
+        case spv::ImageFormatRg16ui:
+            return "rg16uint";
+        case spv::ImageFormatR16ui:
+            return "r16uint";
+        case spv::ImageFormatR8ui:
+            return "r8uint";
+        case spv::ImageFormatR8:
+            return "r8unorm";
+        case spv::ImageFormatRg8:
+            return "rg8unorm";
+        case spv::ImageFormatR8Snorm:
+            return "r8snorm";
+        case spv::ImageFormatRg8Snorm:
+            return "rg8snorm";
+        case spv::ImageFormatRg8i:
+            return "rg8sint";
+        case spv::ImageFormatRg8ui:
+            return "rg8uint";
+        default:
+            throw std::runtime_error("SpirvCrossReflector: unsupported SPIR-V storage-image format ("
+                                     + std::to_string(static_cast<int>(fmt)) + ")");
+    }
+}
+
 // Populate one ReflectedBindingInfo from a SPIRV-Cross resource
 template<vne::sc::ReflectedResourceType Type>
 void appendBinding(const spirv_cross::Compiler& compiler,
@@ -73,10 +144,60 @@ void appendBinding(const spirv_cross::Compiler& compiler,
     const spirv_cross::SPIRType& ty = compiler.get_type(res.type_id);
     const uint32_t array_size = ty.array.empty() ? 1u : (ty.array[0] == 0u ? 0u : ty.array[0]);
 
+    // Refine the coarse "which SPIRV-Cross list did this come from" type using the actual
+    // image dimensionality. WebGPU needs the exact texture kind to build a bind-group layout
+    // (texture_2d vs texture_2d_array vs texture_3d vs texture_cube[_array], plus depth and
+    // multisampled), and previously only the DimCube case was handled -- which is why vnerhi's
+    // WebGPU backend re-parsed the emitted WGSL instead of trusting reflection.bin.
     ReflectedResourceType actual_type = Type;
-    if constexpr (Type == ReflectedResourceType::eSampledImage) {
-        if (ty.image.dim == spv::DimCube) {
-            actual_type = ReflectedResourceType::eSampledCubemap;
+    std::string storage_format_hint;
+    std::string storage_access_hint;
+    bool multisampled = false;
+    bool depth_texture = false;
+
+    if constexpr (Type == ReflectedResourceType::eSampledImage
+                  || Type == ReflectedResourceType::eCombinedImageSampler) {
+        const bool arrayed = ty.image.arrayed;
+        switch (ty.image.dim) {
+            case spv::DimCube:
+                actual_type =
+                    arrayed ? ReflectedResourceType::eSampledCubeArray : ReflectedResourceType::eSampledCubemap;
+                break;
+            case spv::Dim3D:
+                actual_type = ReflectedResourceType::eSampledImage3D;
+                break;
+            case spv::Dim2D:
+                if (arrayed) {
+                    actual_type = ReflectedResourceType::eSampled2DArray;
+                }
+                break;
+            default:
+                break;
+        }
+        multisampled = ty.image.ms;
+        depth_texture = ty.image.depth;
+    }
+
+    if constexpr (Type == ReflectedResourceType::eStorageImage) {
+        storage_format_hint = imageFormatName(ty.image.format);
+        const bool non_writable = compiler.has_decoration(res.id, spv::DecorationNonWritable);
+        const bool non_readable = compiler.has_decoration(res.id, spv::DecorationNonReadable);
+        if (non_writable && !non_readable) {
+            storage_access_hint = "read";
+        } else if (non_readable && !non_writable) {
+            storage_access_hint = "write";
+        } else {
+            storage_access_hint = "read_write";
+        }
+        multisampled = ty.image.ms;
+    }
+
+    if constexpr (Type == ReflectedResourceType::eStorageBuffer) {
+        // A readonly SSBO must be declared as `storage, read` in WGSL, and is the only storage
+        // buffer form WebGPU allows in a vertex stage.
+        const spirv_cross::Bitset flags = compiler.get_buffer_block_flags(res.id);
+        if (flags.get(spv::DecorationNonWritable)) {
+            actual_type = ReflectedResourceType::eReadOnlyStorageBuffer;
         }
     }
 
@@ -137,6 +258,10 @@ void appendBinding(const spirv_cross::Compiler& compiler,
     info.array_size = array_size;
     info.stages = ShaderStageFlags::eNone;
     info.slots = slots;
+    info.storage_format_hint = std::move(storage_format_hint);
+    info.storage_access_hint = std::move(storage_access_hint);
+    info.multisampled = multisampled;
+    info.depth_texture = depth_texture;
 
     if constexpr (Type == ReflectedResourceType::eUniformBuffer || Type == ReflectedResourceType::eStorageBuffer) {
         try {

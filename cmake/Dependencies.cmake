@@ -267,16 +267,61 @@ if(VNE_SC_TINT)
     # library that has negligible benefit from debug symbols.
     set(_vne_sc_saved_build_type "${CMAKE_BUILD_TYPE}")
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
+    # Pin is fixed (chromium/6723). Skip ExternalProject update on reconfigure when
+    # that revision is already present: modern Git defaults to
+    # fetch.recurseSubmodules=on-demand, and Dawn's DAWN_FETCH_DEPENDENCIES
+    # checkouts often lack an `origin` remote, so a plain `git fetch` on dawn-src
+    # fails mid-configure. If the shallow checkout is missing the pin, wipe it so
+    # FetchContent re-clones (still without submodule recursion).
+    set(_vne_sc_dawn_tag "chromium/6723")
+    set(_vne_sc_dawn_src "${CMAKE_BINARY_DIR}/_deps/dawn-src")
+    if(EXISTS "${_vne_sc_dawn_src}/.git")
+        find_package(Git QUIET)
+        if(Git_FOUND)
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" rev-parse --verify --quiet "${_vne_sc_dawn_tag}^{commit}"
+                WORKING_DIRECTORY "${_vne_sc_dawn_src}"
+                RESULT_VARIABLE _vne_sc_dawn_tag_ok
+                OUTPUT_QUIET
+                ERROR_QUIET)
+            set(_vne_sc_dawn_head "")
+            set(_vne_sc_dawn_wanted "")
+            if(_vne_sc_dawn_tag_ok EQUAL 0)
+                execute_process(
+                    COMMAND "${GIT_EXECUTABLE}" rev-parse HEAD
+                    WORKING_DIRECTORY "${_vne_sc_dawn_src}"
+                    OUTPUT_VARIABLE _vne_sc_dawn_head
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET)
+                execute_process(
+                    COMMAND "${GIT_EXECUTABLE}" rev-parse "${_vne_sc_dawn_tag}^{commit}"
+                    WORKING_DIRECTORY "${_vne_sc_dawn_src}"
+                    OUTPUT_VARIABLE _vne_sc_dawn_wanted
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    ERROR_QUIET)
+            endif()
+            if(NOT _vne_sc_dawn_tag_ok EQUAL 0 OR NOT _vne_sc_dawn_head STREQUAL _vne_sc_dawn_wanted)
+                message(STATUS
+                    "[vnesc] Dawn checkout missing or not at ${_vne_sc_dawn_tag}; "
+                    "removing for FetchContent re-populate")
+                file(REMOVE_RECURSE
+                    "${CMAKE_BINARY_DIR}/_deps/dawn-src"
+                    "${CMAKE_BINARY_DIR}/_deps/dawn-build"
+                    "${CMAKE_BINARY_DIR}/_deps/dawn-subbuild")
+            endif()
+        endif()
+    endif()
     FetchContent_Declare(dawn
-        GIT_REPOSITORY       https://dawn.googlesource.com/dawn
-        GIT_TAG              chromium/6723
-        GIT_SHALLOW          TRUE
-        GIT_SUBMODULES       ""
-        GIT_SUBMODULES_RECURSE FALSE)
+        GIT_REPOSITORY         https://dawn.googlesource.com/dawn
+        GIT_TAG                ${_vne_sc_dawn_tag}
+        GIT_SHALLOW            TRUE
+        GIT_SUBMODULES         ""
+        GIT_SUBMODULES_RECURSE FALSE
+        UPDATE_DISCONNECTED    TRUE)
     FetchContent_MakeAvailable(dawn)
     _vne_sc_fix_dawn_abseil_randen_copts()
     set(CMAKE_BUILD_TYPE "${_vne_sc_saved_build_type}" CACHE STRING "" FORCE)
-    message(STATUS "[vnesc] Dawn/Tint -> FetchContent chromium/6723 (Release build)")
+    message(STATUS "[vnesc] Dawn/Tint -> FetchContent ${_vne_sc_dawn_tag} (Release build)")
 endif()
 
 #==============================================================================
@@ -310,6 +355,11 @@ function(vne_sc_link_tint target)
         message(FATAL_ERROR "vne_sc_link_tint: no libtint or tint target found from Dawn")
     endif()
     target_compile_definitions(${target} PRIVATE VNE_SC_TINT_ENABLED)
+    # Tint BlockAllocator uses alignas; MSVC C4324 (structure padded) is expected
+    # and must not fail WARNINGS_AS_ERRORS=/WX when compiling our Tint wrappers.
+    if(MSVC)
+        target_compile_options(${target} PRIVATE /wd4324)
+    endif()
 endfunction()
 
 #==============================================================================

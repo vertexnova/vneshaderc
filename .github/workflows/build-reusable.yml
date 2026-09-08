@@ -167,6 +167,14 @@ jobs:
 
           # shellcheck disable=SC2086  # intentional word-splitting for flag vars
           # vnesc builds static archives; CACHE_LIB_TYPE only selects the build/ dir name.
+          #
+          # Dawn/Tint OOMs GitHub-hosted runners when every matrix cell builds it.
+          # Default CI to Tint OFF; opt in per-job with -DVNE_SC_TINT=ON in extra_cmake_flags.
+          TINT_FLAG="-DVNE_SC_TINT=OFF"
+          if [[ "$EXTRA_FLAGS" == *VNE_SC_TINT* ]]; then
+            TINT_FLAG=""
+          fi
+
           cmake -B "$BUILD_DIR" -S . \
             -DCMAKE_BUILD_TYPE="$EFFECTIVE_BUILD_TYPE" \
             -DVNE_SC_CI=ON \
@@ -174,11 +182,17 @@ jobs:
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
             ${COVERAGE_FLAG} \
             ${COMPILER_FLAGS} \
+            ${TINT_FLAG} \
             ${EXTRA_FLAGS}
 
       - name: Build
         shell: bash
-        run: cmake --build "$BUILD_DIR" --config "$EFFECTIVE_BUILD_TYPE" --parallel
+        run: |
+          # Unconstrained --parallel OOMs while compiling Dawn/Tint + Abseil
+          # (Linux "Killed", exit 143). Cap CI concurrency for memory headroom.
+          JOBS="${CMAKE_BUILD_PARALLEL_LEVEL:-2}"
+          echo "Building with --parallel ${JOBS}"
+          cmake --build "$BUILD_DIR" --config "$EFFECTIVE_BUILD_TYPE" --parallel "${JOBS}"
 
       - name: Verify coverage instrumentation (coverage builds only, Linux)
         if: runner.os == 'Linux' && inputs.enable_coverage

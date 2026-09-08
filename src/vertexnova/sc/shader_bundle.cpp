@@ -245,6 +245,14 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                 return "combined_image_sampler";
             case ReflectedResourceType::eSampledCubemap:
                 return "sampled_cubemap";
+            case ReflectedResourceType::eSampled2DArray:
+                return "sampled_2d_array";
+            case ReflectedResourceType::eSampledCubeArray:
+                return "sampled_cube_array";
+            case ReflectedResourceType::eReadOnlyStorageBuffer:
+                return "readonly_storage_buffer";
+            case ReflectedResourceType::eSampledImage3D:
+                return "sampled_image_3d";
         }
         return "unknown";
     };
@@ -272,6 +280,7 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                 switch (b.type) {
                     case ReflectedResourceType::eUniformBuffer:
                     case ReflectedResourceType::eStorageBuffer:
+                    case ReflectedResourceType::eReadOnlyStorageBuffer:
                         jm["buffer"] = b.slots.metal->buffer;
                         break;
                     case ReflectedResourceType::eCombinedImageSampler:
@@ -280,6 +289,9 @@ bool writeShaderBundle(const ShaderArtifact& artifact, const std::filesystem::pa
                         break;
                     case ReflectedResourceType::eSampledImage:
                     case ReflectedResourceType::eSampledCubemap:
+                    case ReflectedResourceType::eSampled2DArray:
+                    case ReflectedResourceType::eSampledCubeArray:
+                    case ReflectedResourceType::eSampledImage3D:
                     case ReflectedResourceType::eStorageImage:
                         jm["texture"] = b.slots.metal->texture;
                         break;

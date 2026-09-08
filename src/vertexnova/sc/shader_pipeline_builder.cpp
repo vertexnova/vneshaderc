@@ -28,6 +28,25 @@
 CREATE_VNE_LOGGER_CATEGORY("vne.sc.pipeline")
 
 namespace vne::sc {
+namespace {
+
+// Reject cache entries that lack output for every requested target.
+// Complements the .vnca schema version: even current-schema entries must be
+// complete before Phase B (reflect / cross-compile) is skipped.
+bool cachedArtifactReady(const StageArtifact& artifact, const std::vector<CrossTarget>& targets) {
+    if (artifact.spirv.empty()) {
+        return false;
+    }
+    for (const CrossTarget target : targets) {
+        const CrossCompiledSource* cc = artifact.findCrossCompiled(target);
+        if (cc == nullptr || cc->source.empty()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+}  // namespace
 
 ShaderPipelineBuilder::ShaderPipelineBuilder(std::shared_ptr<IShaderFrontEnd> front_end,
                                              std::shared_ptr<IShaderCrossCompiler> cross_compiler,
@@ -96,11 +115,15 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                 ShaderArtifactCache::makeKey(sw.req, desc.targets, desc.metal_layout, metal_program_fingerprint);
             auto cached = cache->lookup(sw.cache_key);
             if (cached.has_value()) {
-                VNE_LOG_DEBUG << "ShaderPipelineBuilder: cache hit for stage " << static_cast<int>(sw.req.stage);
-                sw.artifact = std::move(*cached);
-                sw.needs_backend = false;
-                work.push_back(std::move(sw));
-                continue;
+                if (cachedArtifactReady(*cached, desc.targets)) {
+                    VNE_LOG_DEBUG << "ShaderPipelineBuilder: cache hit for stage " << static_cast<int>(sw.req.stage);
+                    sw.artifact = std::move(*cached);
+                    sw.needs_backend = false;
+                    work.push_back(std::move(sw));
+                    continue;
+                }
+                VNE_LOG_DEBUG << "ShaderPipelineBuilder: ignoring incomplete cache entry for stage "
+                              << static_cast<int>(sw.req.stage);
             }
         }
 
@@ -189,7 +212,10 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
             if (rr.ok()) {
                 sw.artifact.reflection = std::move(rr.reflection);
             } else {
-                VNE_LOG_WARN << "ShaderPipelineBuilder: reflection failed (non-fatal): " << rr.error;
+                result.code = rr.code;
+                result.error = "ShaderPipelineBuilder: reflection failed: " + rr.error;
+                VNE_LOG_ERROR << result.error;
+                return result;
             }
         }
 
@@ -220,15 +246,11 @@ PipelineBuildResult ShaderPipelineBuilder::build(const PipelineBuildDesc& desc) 
                     cc.entry_point = std::move(ccres.entry_point);
                     sw.artifact.cross_compiled.push_back(std::move(cc));
                 } else {
-                    if (target == CrossTarget::eWGSL) {
-                        VNE_LOG_WARN << "ShaderPipelineBuilder: WGSL cross-compile failed (non-fatal): " << ccres.error;
-                    } else {
-                        result.code = ccres.code;
-                        result.error = "ShaderPipelineBuilder: cross-compile to target "
-                                       + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
-                        VNE_LOG_ERROR << result.error;
-                        return result;
-                    }
+                    result.code = ccres.code;
+                    result.error = "ShaderPipelineBuilder: cross-compile to target "
+                                   + std::to_string(static_cast<int>(target)) + " failed: " + ccres.error;
+                    VNE_LOG_ERROR << result.error;
+                    return result;
                 }
             }
         }

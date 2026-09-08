@@ -258,7 +258,7 @@ A compiled `.vneshader` is a directory:
 | File | Contents |
 |------|----------|
 | `bundle.header` | Binary index: stage list, entry points, file names |
-| `reflection.bin` | Binary `ProgramReflection` (v2 format) |
+| `reflection.bin` | Binary `ProgramReflection` (v3 format) |
 | `manifest.json` | Human-readable index (when `VNE_SC_JSON` is enabled) |
 | `<stage>.spv` | SPIR-V bytecode |
 | `<stage>.msl` | MSL source (when `msl` target requested) |

@@ -219,6 +219,8 @@ jobs:
       build_type:         Release
       enable_coverage:    false
       warnings_as_errors: true
+      # Sole Tint-on matrix cell (reusable defaults -DVNE_SC_TINT=OFF).
+      extra_cmake_flags:  "-DVNE_SC_TINT=ON"
       lib_type:           static
     secrets: inherit
 
@@ -318,8 +320,9 @@ jobs:
               -DCMAKE_C_COMPILER=clang \
               -DCMAKE_CXX_COMPILER=clang++ \
               -DVNE_SC_CI=ON \
+              -DVNE_SC_TINT=ON \
               -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-            cmake --build build/static --config Release --parallel
+            cmake --build build/static --config Release --parallel 2
           fi
 
       - name: Run clang-tidy

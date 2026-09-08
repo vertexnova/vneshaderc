@@ -69,8 +69,10 @@ jobs:
           cmake -B build/static -S . \
             -DCMAKE_BUILD_TYPE=Release \
             -DVNE_SC_CI=ON \
+            -DVNE_SC_TINT=OFF \
             -DWARNINGS_AS_ERRORS=OFF
-          cmake --build build/static --config Release --parallel
+          # Cap parallelism: Dawn/Tint + Abseil OOMs under full --parallel.
+          cmake --build build/static --config Release --parallel 2
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
